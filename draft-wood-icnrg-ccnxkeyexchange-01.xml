@@ -97,7 +97,7 @@ eavesdroppers and man-in-the-middle (MITM) attacks.</t>
   <t>The negotiation is reliable: no attacker can modify the
 negotiation communication without being detected by the parties to
 the communication.</t>
-  <t>The state of a CCNx-KE session can be securely migrated between an endpoint
+  <t>The state of a CCNxKE session can be securely migrated between an endpoint
 performing authentication and that which provides content using a “move token.”
 This allows authentication and authorization to be separated from encryption for
 a session, enabling different systems to complete these steps.</t>
@@ -116,7 +116,7 @@ for such proof. UDP-based protocols, such as QUIC <xref target="QUIC"/> and DTLS
 optional session address token or cookie that must be presented by the client (consumer) to
 prove ownership of an address during a key exchange procedure. Without source addresses,
 our cookie technique ensures that the same entity which requested server information,
-e.g., the public configuration data, is the same entity which is requesting to complete
+e.g., the public configuration data, is the same entity that wishes to complete
 a key exchange.</t>
 
 <t>The main contribution of this work is adapting key exchange principles to the pull-based
@@ -136,9 +136,9 @@ document are to be interpreted as described in RFC 2119 <xref target="RFC2119"/>
 
 <t>The following terms are used:</t>
 
-<t>Consumer: The CCN consumer initiating the CCNxKE key exchange via a first Interest.</t>
+<t>Consumer/Client: The CCN consumer initiating the CCNxKE key exchange via a first Interest.</t>
 
-<t>Producer: The CCN producer receiving or accepting the CCNxKE key exchange request request Interest.</t>
+<t>Producer/Server: The CCN producer receiving or accepting the CCNxKE key exchange request request Interest.</t>
 
 <t>Sender: An endpoint that originates a message.</t>
 
@@ -158,7 +158,7 @@ CCNxKE handshake.</t>
 
 <t>DH: A Diffie Hellman key exchange procedure <xref target="RFC2631"/> <xref target="DH"/>.</t>
 
-<t>DH Share: One half of the shared-secret provided by one peer performing a DH key exchange.</t>
+<t>Key Share: One half of the shared-secret provided by one peer performing a DH key exchange.</t>
 
 <t>Forward-secure: The property that compromising any long-term secrets (e.g., cryptographic
 keys) does not compromise any session keys derived from those long-term secrets.</t>
@@ -215,7 +215,7 @@ protocols, e.g., EAP-TLS, EAP-PWD, or a simple challenge-response protocol.</t>
 bandwidth, and message complexity. In particular, it seeks to create sessions with
 as few end-to-end round trips as possible, and also provide support for accelerated
 session establishment and resumption when appropriate. At most 2 round-trip-times
-(RTTs) should be used to establish a session key, with the possibility of 1 or 0 RTT
+(RTTs) should be used to establish a session key, with the possibility of 1-RTT
 accelerated starts and resumption.</t>
 </list></t>
 
@@ -249,13 +249,10 @@ similar to the format used by TLS <xref target="TLS13"/>.</t>
 <t>CCNxKE operates in three rounds, where each round requires a single RTT
 to complete. The full execution of the protocol therefore requires 2 RTTs
 before a session is fully established. The full version is used when consumers
-have no a priori information about the producer. An accelerated two round
-version is used when the consumer has valid configuration information about
-the producer; this variant requires 1 RTT before a session is established.
-Finally, the quickest execution of the protocol requires only a single round
-to resume a previous session (similar to the goal of <xref target="RFC5077"/>). Indeed, if 0 RTT
-latency is desired then the consumer must also include application data in this
-initial round.</t>
+have no a priori information about the producer. An accelerated one round
+version is used when the consumer has valid configuration information and a
+source cookie from the producer; this variant requires 1 RTT before a session
+is established.</t>
 
 </section>
 <section anchor="connection-migration-and-resumption" title="Connection Migration and Resumption">
@@ -306,9 +303,9 @@ on the window size).</t>
 </section>
 <section anchor="loss-sensitivity" title="Loss Sensitivity">
 
-<t>CCNx-KE messages are transferred using standard CCN Interest and Content Objects
+<t>CCNxKE messages are transferred using standard CCN Interest and Content Objects
 and are therefore subject to loss as any datagram. This means that traffic
-encrypted with keys derived from CCNx-KE must be stateless. They cannot depend
+encrypted with keys derived from CCNxKE must be stateless. They cannot depend
 on in-order arrival. This problem is solved by two mechanisms: (1) by prohibiting
 stream ciphers of any kind and (2) adding sequence numbers to each message that
 allow the receiver to identify and use the correct cryptographic state to decrypt
@@ -328,7 +325,7 @@ different wire format encodings, such as those used by the NDN protocol.</t>
 <t><list style="symbols">
   <t>Consumers know the namespace prefix of the producer for which they wish to
 execute the CCNxKE protocol.</t>
-  <t>CCNx-KE protocol information is carried in a distinguished field outside of the payload of CCN messages.
+  <t>CCNxKE protocol information is carried in a distinguished field outside of the payload of CCN messages.
 This is done to distinguish key exchange material with application data in a message.
 This is necessary for 0 RTT packets that carry both keying material and application payload.</t>
   <t>CCNxKE does not require any special behavior of intermediate systems to forward packets.</t>
@@ -343,7 +340,8 @@ the use of consumer-specific nonces in names.</t>
 
 <t><list style="symbols">
   <t>Round 1: Perform a bare HELLO exchange to obtain the extensions (parameters) for the
-key exchange provided by the producer.</t>
+key exchange provided by the producer and a source cookie to prove ownership of
+the “source” of the request.</t>
   <t>Round 2: Perform the initial FULL-HELLO exchange to establish a forward-secure
 key used for future communication, i.e., Interest and Content Object exchanges in
 the context of the newly established session.</t>
@@ -363,13 +361,13 @@ is not forward secure.</t>
 ephemeral key shares.</t>
 </list></t>
 
-<t>Depending on the mode in which CCNx-KE is used, these secrets can be established
+<t>Depending on the mode in which CCNxKE is used, these secrets can be established
 in a variety of ways. Key derivation details are outlined in Section <xref target="derive"/>.</t>
 
 <t>All secrets are derived with the appropriate amount of randomness <xref target="RFC4086"/>.
 An overview of the messages sent in each of the three rounds to
-establish and use these secrets is shown in Figure <xref target="ccnxke-high"/> below.  This
-diagram omits the optional session migration tokens and the quick restart cookie.</t>
+establish and use these secrets is shown in Figure <xref target="ccnxke-high"/> below. This
+diagram omits some parts of each message for brevity.</t>
 
 <figure title="High-level message flow for full CCNxKE protocol with a maximum 2-RTT delay." anchor="ccnxke-high"><artwork><![CDATA[
     Consumer                                           Producer
@@ -391,18 +389,11 @@ diagram omits the optional session migration tokens and the quick restart cookie
     + SourceCookie
     + SourceProof
     + Timestamp
-    + ConsumerPrefix*
-    + {AlgChoice}
-    + {MoveChallenge}
-    + Certificate*
-    + CertificateVerify*
                        I[/prefix/random-2]
                              -------->
                                                     HELLO-ACCEPT:
                                                  + ServerKeyShare
                                                       + SessionID
-                                             + {ServerExtensions}
-                                             + [ResumptionCookie]
                                           + {CertificateRequest*}
                                            + {CertificateVerify*}
                                      + {MovePrefix*, MoveToken)*}
@@ -419,7 +410,6 @@ diagram omits the optional session migration tokens and the quick restart cookie
                             -------->
                                                  + NewSessionID*
                                               + NewSessionIDTag*
-                                           + [ResumptionCookie*]
                                                         Payload:
                                                   [ProducerData]
                      CO[/prefix/SessionID/[...]]
@@ -457,7 +447,7 @@ a JSON object, e.g.,</t>
 
 <t>For now, we assume some valid encoding mechanism is used to give structure
 to message payloads. Moreover, we assume that these payloads are carried in a
-distinguished CCNx-KE payload field contained in the Interest and Content Objects.</t>
+distinguished CCNxKE payload field contained in the Interest and Content Objects.</t>
 
 </section>
 <section anchor="round-1" title="Round 1">
@@ -713,7 +703,7 @@ NewSessionIDTag.</t>
 </section>
 <section anchor="alternative-exchanges" title="Alternative Exchanges">
 
-<t>CCNx-KE also supports one-round key exchange and session resumption. These variants
+<t>CCNxKE also supports one-round key exchange and session resumption. These variants
 are outlined below. The key material differences are described later. In these
 variants, we use message ExchangeSourceCookie to denote the following exchange:</t>
 
@@ -934,7 +924,7 @@ re-initialize the previous session with the consumer.</t>
 </section>
 <section anchor="key-derivation" title="Key Derivation">
 
-<t>CCNx-KE adopts the key schedule and derivation techniques defined in TLS 1.3 <xref target="TLS13"/>.
+<t>CCNxKE adopts the key schedule and derivation techniques defined in TLS 1.3 <xref target="TLS13"/>.
 Specifically, it uses the SS and ES to establish a common master secret (MS) and,
 from that, the traffic secret (TS). These dependencies are shown below.</t>
 
@@ -995,7 +985,7 @@ They are repeated here for posterity.</t>
 </list></t>
 
 <t>In all computations, the value “handshake_hash” is defined as the SHA256 hash
-digest of all CCNx-KE messages contained up to the point of derivation. More details
+digest of all CCNxKE messages contained up to the point of derivation. More details
 are given in Section 7.3.1 of <xref target="TLS13"/>.</t>
 
 <t>Updating the traffic secret using the re-key message (defined later) increments

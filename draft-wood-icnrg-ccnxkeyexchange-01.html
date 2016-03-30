@@ -517,17 +517,17 @@
   <li>Each peer&#8217;s identity can be authenticated using asymmetric, or public key, cryptography (e.g., RSA <a href="#RSA">[RSA]</a>, ECDSA <a href="#ECDSA">[ECDSA]</a>, etc.).  Server authentication is mandatory whereas mutual authentication is optional.</li>
   <li>The negotiation of a forward-secure shared secret is protected from eavesdroppers and man-in-the-middle (MITM) attacks.</li>
   <li>The negotiation is reliable: no attacker can modify the negotiation communication without being detected by the parties to the communication.</li>
-  <li>The state of a CCNx-KE session can be securely migrated between an endpoint performing authentication and that which provides content using a &#8220;move token.&#8221; This allows authentication and authorization to be separated from encryption for a session, enabling different systems to complete these steps.</li>
+  <li>The state of a CCNxKE session can be securely migrated between an endpoint performing authentication and that which provides content using a &#8220;move token.&#8221; This allows authentication and authorization to be separated from encryption for a session, enabling different systems to complete these steps.</li>
 </ul>
 <p id="rfc.section.1.p.4">Usage of CCNxKE is entirely independent of upper-layer application protocols.  Session-based communication via encapsulation and encryption enables secure, confidential, and authenticated communication between two peers. One advantage of this protocol is that it facilitates the creation and use of ephemeral CCN Interest and Content Objects.</p>
-<p id="rfc.section.1.p.5">CCNxKE also introduces a new type of cookie based on reverse hash chains <a href="#HASHCHAIN">[HASHCHAIN]</a> to help limit the amount of significant server work done in response to a client or consumer Interest. TCP-based protocols, such as TLS <a href="#TLS13">[TLS13]</a>, use the TCP 3-way handshake for such proof. UDP-based protocols, such as QUIC <a href="#QUIC">[QUIC]</a> and DTLS 1.2 <a href="#DTLS12">[DTLS12]</a>, use an optional session address token or cookie that must be presented by the client (consumer) to prove ownership of an address during a key exchange procedure. Without source addresses, our cookie technique ensures that the same entity which requested server information, e.g., the public configuration data, is the same entity which is requesting to complete a key exchange.</p>
+<p id="rfc.section.1.p.5">CCNxKE also introduces a new type of cookie based on reverse hash chains <a href="#HASHCHAIN">[HASHCHAIN]</a> to help limit the amount of significant server work done in response to a client or consumer Interest. TCP-based protocols, such as TLS <a href="#TLS13">[TLS13]</a>, use the TCP 3-way handshake for such proof. UDP-based protocols, such as QUIC <a href="#QUIC">[QUIC]</a> and DTLS 1.2 <a href="#DTLS12">[DTLS12]</a>, use an optional session address token or cookie that must be presented by the client (consumer) to prove ownership of an address during a key exchange procedure. Without source addresses, our cookie technique ensures that the same entity which requested server information, e.g., the public configuration data, is the same entity that wishes to complete a key exchange.</p>
 <p id="rfc.section.1.p.6">The main contribution of this work is adapting key exchange principles to the pull-based CCNx communication model. CCNxKE only assumes that a consumer knows a first name prefix to initiate the key exchange. The first Interest does not need to be a CCNxKE packet &#8212; the producer can signal back to the consumer that it requires CCNxKE before progressing.</p>
 <p id="rfc.section.1.p.7">This specification does not subsume other ICN-compliant key exchange protocols. Nor does its existence imply that all encryption in an ICN must be based on sessions.  It was designed specifically to solve the problem of session-based encryption in ICN.</p>
 <h1 id="rfc.section.1.1"><a href="#rfc.section.1.1">1.1.</a> <a href="#conventions-and-terminology" id="conventions-and-terminology">Conventions and Terminology</a></h1>
 <p id="rfc.section.1.1.p.1">The key words &#8220;MUST&#8221;, &#8220;MUST NOT&#8221;, &#8220;REQUIRED&#8221;, &#8220;SHALL&#8221;, &#8220;SHALL NOT&#8221;, &#8220;SHOULD&#8221;, &#8220;SHOULD NOT&#8221;, &#8220;RECOMMENDED&#8221;, &#8220;NOT RECOMMENDED&#8221;, &#8220;MAY&#8221;, and &#8220;OPTIONAL&#8221; in this document are to be interpreted as described in RFC 2119 <a href="#RFC2119">[RFC2119]</a>.</p>
 <p id="rfc.section.1.1.p.2">The following terms are used:</p>
-<p id="rfc.section.1.1.p.3">Consumer: The CCN consumer initiating the CCNxKE key exchange via a first Interest.</p>
-<p id="rfc.section.1.1.p.4">Producer: The CCN producer receiving or accepting the CCNxKE key exchange request request Interest.</p>
+<p id="rfc.section.1.1.p.3">Consumer/Client: The CCN consumer initiating the CCNxKE key exchange via a first Interest.</p>
+<p id="rfc.section.1.1.p.4">Producer/Server: The CCN producer receiving or accepting the CCNxKE key exchange request request Interest.</p>
 <p id="rfc.section.1.1.p.5">Sender: An endpoint that originates a message.</p>
 <p id="rfc.section.1.1.p.6">Receiver: An endpoint that is receiving messages.</p>
 <p id="rfc.section.1.1.p.7">Peer: An endpoint. When discussing a particular endpoint, &#8220;peer&#8221; refers to the endpoint that is remote to the primary subject of discussion.</p>
@@ -536,7 +536,7 @@
 <p id="rfc.section.1.1.p.10">Handshake: A series of message exchanges between two peers that is used to perform a task (e.g., perform key exchange and derivation).</p>
 <p id="rfc.section.1.1.p.11">Session: An association between a consumer and a producer resulting from a CCNxKE handshake.</p>
 <p id="rfc.section.1.1.p.12">DH: A Diffie Hellman key exchange procedure <a href="#RFC2631">[RFC2631]</a> <a href="#DH">[DH]</a>.</p>
-<p id="rfc.section.1.1.p.13">DH Share: One half of the shared-secret provided by one peer performing a DH key exchange.</p>
+<p id="rfc.section.1.1.p.13">Key Share: One half of the shared-secret provided by one peer performing a DH key exchange.</p>
 <p id="rfc.section.1.1.p.14">Forward-secure: The property that compromising any long-term secrets (e.g., cryptographic keys) does not compromise any session keys derived from those long-term secrets.</p>
 <p id="rfc.section.1.1.p.15">CONFIG information: A data structure created by a producer which contains long-term cryptographic material and associated information needed by a client to initiate a key-exchange with the producer.</p>
 <p id="rfc.section.1.1.p.16">HELLO exchange: An exchange between a consumer and producer wherein the consumer retrieves the CONFIG information from the producer.</p>
@@ -555,7 +555,7 @@
   <li>Cryptographic security: CCNxKE should be used to securely establish a session and all related shared secrets between two peers. Cryptographic properties of interest include: (a) forward-secure session key derivation and (b) (state and computational) denial-of-service prevention at the producer (see <a href="#RFC4987">[RFC4987]</a>) that is no worse than DTLS 1.2 <a href="#DTLS12">[DTLS12]</a>}. For property (a), different keys (and relevant algorithm parameters such as IVs) are established for each communication direction, i.e., from consumer to producer and producer to consumer. For property (b), we use a new type of stateless cookie inspired by that of DTLS 1.2.</li>
   <li>Interoperability: Independent programmers should be able to develop applications utilizing CCNxKE that can successfully exchange cryptographic parameters without knowledge of one another&#8217;s code.</li>
   <li>Extensibility: CCNxKE seeks to provide a framework into which new public key and symmetric key methods and algorithms can be incorporated without breaking backwards compatibility or requiring all clients to implement new functionality.  Moreover, the protocol should be able to support a variety of peer authentication protocols, e.g., EAP-TLS, EAP-PWD, or a simple challenge-response protocol.</li>
-  <li>Relative efficiency: CCNxKE tries to create sessions with minimal computation, bandwidth, and message complexity. In particular, it seeks to create sessions with as few end-to-end round trips as possible, and also provide support for accelerated session establishment and resumption when appropriate. At most 2 round-trip-times (RTTs) should be used to establish a session key, with the possibility of 1 or 0 RTT accelerated starts and resumption.</li>
+  <li>Relative efficiency: CCNxKE tries to create sessions with minimal computation, bandwidth, and message complexity. In particular, it seeks to create sessions with as few end-to-end round trips as possible, and also provide support for accelerated session establishment and resumption when appropriate. At most 2 round-trip-times (RTTs) should be used to establish a session key, with the possibility of 1-RTT accelerated starts and resumption.</li>
 </ol>
 <h1 id="rfc.section.3"><a href="#rfc.section.3">3.</a> <a href="#scope" id="scope">Scope</a></h1>
 <p id="rfc.section.3.p.1">This document and the CCNxKE protocol are influenced by the TLS 1.3 <a href="#TLS13">[TLS13]</a>, QUIC <a href="#QUIC">[QUIC]</a>, and DTLS 1.2 <a href="#DTLS12">[DTLS12]</a> protocols.  The reader, however, does not need a detailed understanding of those protocols to understand this document. Moreover, where appropriate, references to related protocols are made for brevity and technical clarity. This document is intended primarily for readers who will be implementing the protocol and for those doing cryptographic analysis of it. The specification has been written with this in mind and it is intended to reflect the needs of those two groups.</p>
@@ -564,7 +564,7 @@
 <p id="rfc.section.4.p.1">This document uses a presentation language of remote calls (i.e. packet messages) similar to the format used by TLS <a href="#TLS13">[TLS13]</a>.</p>
 <h1 id="rfc.section.5"><a href="#rfc.section.5">5.</a> <a href="#ccnxke-overview" id="ccnxke-overview">CCNxKE Overview</a></h1>
 <h1 id="rfc.section.5.1"><a href="#rfc.section.5.1">5.1.</a> <a href="#connection-establishment-latency" id="connection-establishment-latency">Connection Establishment Latency</a></h1>
-<p id="rfc.section.5.1.p.1">CCNxKE operates in three rounds, where each round requires a single RTT to complete. The full execution of the protocol therefore requires 2 RTTs before a session is fully established. The full version is used when consumers have no a priori information about the producer. An accelerated two round version is used when the consumer has valid configuration information about the producer; this variant requires 1 RTT before a session is established.  Finally, the quickest execution of the protocol requires only a single round to resume a previous session (similar to the goal of <a href="#RFC5077">[RFC5077]</a>). Indeed, if 0 RTT latency is desired then the consumer must also include application data in this initial round.</p>
+<p id="rfc.section.5.1.p.1">CCNxKE operates in three rounds, where each round requires a single RTT to complete. The full execution of the protocol therefore requires 2 RTTs before a session is fully established. The full version is used when consumers have no a priori information about the producer. An accelerated one round version is used when the consumer has valid configuration information and a source cookie from the producer; this variant requires 1 RTT before a session is established.</p>
 <h1 id="rfc.section.5.2"><a href="#rfc.section.5.2">5.2.</a> <a href="#connection-migration-and-resumption" id="connection-migration-and-resumption">Connection Migration and Resumption</a></h1>
 <p id="rfc.section.5.2.p.1">CCN end hosts lack the notion of addresses. Thus, the producer endpoint for a given execution of the CCNxKE protocol is one which can authoritatively serve as the owner of a particular namespace. For example, a consumer may wish to establish a session with a producer who owns the /company/foo namespace.  The specific end host which partakes in the protocol instance is not specified, by virtue of the fact that all CCNxKE messages are based on well-defined names.  This enables the producer end-host which partakes in the protocol to change based on the name of the CCNxKE messages. Consequently, to maintain correctness, it is important that a single execution of the protocol operates within the same trusted context; this does not mean that the same producer end-host is required to participate in all three steps of the protocol.  Rather, it means that the end-host responding to a CCNxKE message must be trusted by the consumer to complete the exchange. CCNxKE is designed to enable this sort of producer migration.</p>
 <p id="rfc.section.5.2.p.2">For example, a consumer may use an initial name like &#8216;/parc/index.html&#8217; that works like an IP any cast address and could got to one of several systems.  CCNxKE allows the responding endpoint to include a localized name to ensure that subsequent messages from the consumer come back to the same producer.  CCNxKE also allows the key exchange peer to securely hand-off the session to a content producer peer via another name and session token once the client is authenticated and keying material is exchanged.</p>
@@ -578,7 +578,7 @@
   <li>The optimized anti-replay algorithm of <a href="#RFC6479">[RFC6479]</a>.</li>
 </ul>
 <h1 id="rfc.section.5.4"><a href="#rfc.section.5.4">5.4.</a> <a href="#loss-sensitivity" id="loss-sensitivity">Loss Sensitivity</a></h1>
-<p id="rfc.section.5.4.p.1">CCNx-KE messages are transferred using standard CCN Interest and Content Objects and are therefore subject to loss as any datagram. This means that traffic encrypted with keys derived from CCNx-KE must be stateless. They cannot depend on in-order arrival. This problem is solved by two mechanisms: (1) by prohibiting stream ciphers of any kind and (2) adding sequence numbers to each message that allow the receiver to identify and use the correct cryptographic state to decrypt the message. Moreover, sequence numbers permit anti-replay mechanisms similar to those used in DTLS <a href="#DTLS12">[DTLS12]</a> as mentioned above.</p>
+<p id="rfc.section.5.4.p.1">CCNxKE messages are transferred using standard CCN Interest and Content Objects and are therefore subject to loss as any datagram. This means that traffic encrypted with keys derived from CCNxKE must be stateless. They cannot depend on in-order arrival. This problem is solved by two mechanisms: (1) by prohibiting stream ciphers of any kind and (2) adding sequence numbers to each message that allow the receiver to identify and use the correct cryptographic state to decrypt the message. Moreover, sequence numbers permit anti-replay mechanisms similar to those used in DTLS <a href="#DTLS12">[DTLS12]</a> as mentioned above.</p>
 <h1 id="rfc.section.6"><a href="#rfc.section.6">6.</a> <a href="#the-ccnxke-protocol" id="the-ccnxke-protocol">The CCNxKE Protocol</a></h1>
 <p id="rfc.section.6.p.1">This section describes the CCNxKE protocol in detail at the message level. The specific encoding of those messages is given later. CCNxKE could be adapted to different wire format encodings, such as those used by the NDN protocol.</p>
 <p id="rfc.section.6.p.2">The following assumptions are made about peers participating in the CCNxKE protocol:</p>
@@ -586,7 +586,7 @@
 
 <ul>
   <li>Consumers know the namespace prefix of the producer for which they wish to execute the CCNxKE protocol.</li>
-  <li>CCNx-KE protocol information is carried in a distinguished field outside of the payload of CCN messages.  This is done to distinguish key exchange material with application data in a message.  This is necessary for 0 RTT packets that carry both keying material and application payload.</li>
+  <li>CCNxKE protocol information is carried in a distinguished field outside of the payload of CCN messages.  This is done to distinguish key exchange material with application data in a message.  This is necessary for 0 RTT packets that carry both keying material and application payload.</li>
   <li>CCNxKE does not require any special behavior of intermediate systems to forward packets.</li>
   <li>CCNxKE packets generally should not be cached for significant periods of time, as use normal protocol methods to limit caching. Part of this is achieved through the use of consumer-specific nonces in names.</li>
 </ul>
@@ -595,7 +595,7 @@
 <p/>
 
 <ul>
-  <li>Round 1: Perform a bare HELLO exchange to obtain the extensions (parameters) for the key exchange provided by the producer.</li>
+  <li>Round 1: Perform a bare HELLO exchange to obtain the extensions (parameters) for the key exchange provided by the producer and a source cookie to prove ownership of the &#8220;source&#8221; of the request.</li>
   <li>Round 2: Perform the initial FULL-HELLO exchange to establish a forward-secure key used for future communication, i.e., Interest and Content Object exchanges in the context of the newly established session.</li>
   <li>Round 3: Send the first bit of application data and (optionally) transfer resumption cookie(s) from the producer to the consumer.</li>
 </ul>
@@ -606,8 +606,8 @@
   <li>Static Secret (SS): A secret which is derived in one of two ways: (a) from the client and server ephemeral key shares and (b) from the server&#8217;s semi-static share and the client&#8217;s ephemeral key share. Keying material derived from SS in option (a) is not forward secure.</li>
   <li>Ephemeral Secret (ES): A secret which is derived from both the client and server ephemeral key shares.</li>
 </ul>
-<p id="rfc.section.6.1.p.5">Depending on the mode in which CCNx-KE is used, these secrets can be established in a variety of ways. Key derivation details are outlined in Section <a href="#derive">Section 9</a>.</p>
-<p id="rfc.section.6.1.p.6">All secrets are derived with the appropriate amount of randomness <a href="#RFC4086">[RFC4086]</a>.  An overview of the messages sent in each of the three rounds to establish and use these secrets is shown in Figure <a href="#ccnxke-high">Figure 1</a> below.  This diagram omits the optional session migration tokens and the quick restart cookie.</p>
+<p id="rfc.section.6.1.p.5">Depending on the mode in which CCNxKE is used, these secrets can be established in a variety of ways. Key derivation details are outlined in Section <a href="#derive">Section 9</a>.</p>
+<p id="rfc.section.6.1.p.6">All secrets are derived with the appropriate amount of randomness <a href="#RFC4086">[RFC4086]</a>.  An overview of the messages sent in each of the three rounds to establish and use these secrets is shown in Figure <a href="#ccnxke-high">Figure 1</a> below. This diagram omits some parts of each message for brevity.</p>
 <div id="rfc.figure.1"/>
 <div id="ccnxke-high"/>
 <pre>
@@ -630,18 +630,11 @@
     + SourceCookie
     + SourceProof
     + Timestamp
-    + ConsumerPrefix*
-    + {AlgChoice}
-    + {MoveChallenge}
-    + Certificate*
-    + CertificateVerify*
                        I[/prefix/random-2]
                              --------&gt;
                                                     HELLO-ACCEPT:
                                                  + ServerKeyShare
                                                       + SessionID
-                                             + {ServerExtensions}
-                                             + [ResumptionCookie]
                                           + {CertificateRequest*}
                                            + {CertificateVerify*}
                                      + {MovePrefix*, MoveToken)*}
@@ -658,7 +651,6 @@
                             --------&gt;
                                                  + NewSessionID*
                                               + NewSessionIDTag*
-                                           + [ResumptionCookie*]
                                                         Payload:
                                                   [ProducerData]
                      CO[/prefix/SessionID/[...]]
@@ -682,7 +674,7 @@
 <p id="rfc.section.6.1.p.7">In the following sections, we will describe the format of each round in this protocol in more detail.</p>
 <p id="rfc.section.6.1.p.8">We do not specify the encoding of CCNxKE data sent in Interest and Content Object payloads. Any viable encoding will suffice, so long as both parties agree upon the type. For example, the payload could be structured and encoded as a JSON object, e.g.,</p>
 <p id="rfc.section.6.1.p.9">{ &#8220;ClientKeyShare&#8221; : 0xaa, &#8220;SourceCookie&#8221; : 0xbb, &#8220;SourceProof&#8221; : 0xbb, &#8230; }</p>
-<p id="rfc.section.6.1.p.10">For now, we assume some valid encoding mechanism is used to give structure to message payloads. Moreover, we assume that these payloads are carried in a distinguished CCNx-KE payload field contained in the Interest and Content Objects.</p>
+<p id="rfc.section.6.1.p.10">For now, we assume some valid encoding mechanism is used to give structure to message payloads. Moreover, we assume that these payloads are carried in a distinguished CCNxKE payload field contained in the Interest and Content Objects.</p>
 <h1 id="rfc.section.6.2"><a href="#rfc.section.6.2">6.2.</a> <a href="#round-1" id="round-1">Round 1</a></h1>
 <p id="rfc.section.6.2.p.1">The purpose of Round 1 is to acquire a cookie to binding the exchange to the initial consumer and the public configuration information contained in the ServerConfiguration structure. This information is used in the second round when performing the actual key exchange. To that end, the format of the Round 1 message is trivial. First, the client issues an Interest with the following name</p>
 <pre>
@@ -957,7 +949,7 @@
 <p id="rfc.section.6.4.p.3">The producer is free to choose the frequency at which new resumption cookies are issued to the consumer.</p>
 <p id="rfc.section.6.4.p.4">The producer may also reply with a new SessionID. This is done if the client presented a MoveToken and MoveProof. A NewSessionID must be accompanied with a NewSessionIDTag, which is equal to the HMAC of NewSessionID computed with the traffic-secret key.  A client MUST then use NewSessionID instead of SessionID after verifying the NewSessionIDTag.</p>
 <h1 id="rfc.section.7"><a href="#rfc.section.7">7.</a> <a href="#alternative-exchanges" id="alternative-exchanges">Alternative Exchanges</a></h1>
-<p id="rfc.section.7.p.1">CCNx-KE also supports one-round key exchange and session resumption. These variants are outlined below. The key material differences are described later. In these variants, we use message ExchangeSourceCookie to denote the following exchange:</p>
+<p id="rfc.section.7.p.1">CCNxKE also supports one-round key exchange and session resumption. These variants are outlined below. The key material differences are described later. In these variants, we use message ExchangeSourceCookie to denote the following exchange:</p>
 <div id="rfc.figure.2"/>
 <div id="cookieexchange"/>
 <pre>
@@ -1104,7 +1096,7 @@ SessionID = Enc(k1, H(TS || (Prefix3)))
 </pre>
 <p id="rfc.section.9.3.p.9">If equality holds, the producer uses the TS recovered from ResumptionCookie to re-initialize the previous session with the consumer.</p>
 <h1 id="rfc.section.9.4"><a href="#rfc.section.9.4">9.4.</a> <a href="#key-derivation" id="key-derivation">Key Derivation</a></h1>
-<p id="rfc.section.9.4.p.1">CCNx-KE adopts the key schedule and derivation techniques defined in TLS 1.3 <a href="#TLS13">[TLS13]</a>.  Specifically, it uses the SS and ES to establish a common master secret (MS) and, from that, the traffic secret (TS). These dependencies are shown below.</p>
+<p id="rfc.section.9.4.p.1">CCNxKE adopts the key schedule and derivation techniques defined in TLS 1.3 <a href="#TLS13">[TLS13]</a>.  Specifically, it uses the SS and ES to establish a common master secret (MS) and, from that, the traffic secret (TS). These dependencies are shown below.</p>
 <pre>
 +------+           +------+
 | KE-1 |           | KE-2 |
@@ -1165,7 +1157,7 @@ SessionID = Enc(k1, H(TS || (Prefix3)))
   <li>master_secret = HKDF-Extract(mSS, mES)</li>
   <li>traffic_secret_0 = HKDF-Expand-Label(master_secret, &#8220;traffic secret&#8221;, handshake_hash, L)</li>
 </ol>
-<p id="rfc.section.9.4.p.5">In all computations, the value &#8220;handshake_hash&#8221; is defined as the SHA256 hash digest of all CCNx-KE messages contained up to the point of derivation. More details are given in Section 7.3.1 of <a href="#TLS13">[TLS13]</a>.</p>
+<p id="rfc.section.9.4.p.5">In all computations, the value &#8220;handshake_hash&#8221; is defined as the SHA256 hash digest of all CCNxKE messages contained up to the point of derivation. More details are given in Section 7.3.1 of <a href="#TLS13">[TLS13]</a>.</p>
 <p id="rfc.section.9.4.p.6">Updating the traffic secret using the re-key message (defined later) increments traffic_secret_N to traffic_secret_(N+1). This update procedure works as follows:</p>
 <p id="rfc.section.9.4.p.7">traffic_secret_N+1 = HKDF-Expand-Label(traffic_secret_N, &#8220;traffic secret&#8221;, &#8220;&#8221;, L)</p>
 <h1 id="rfc.section.9.5"><a href="#rfc.section.9.5">9.5.</a> <a href="#secret-generation-and-lifecycle" id="secret-generation-and-lifecycle">Secret Generation and Lifecycle</a></h1>
