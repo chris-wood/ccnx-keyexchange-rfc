@@ -167,9 +167,10 @@ for secure and confidential communication. The protocol is designed to prevent
 eavesdropping, tampering, and message forgery between two peers. It is also
 designed to minimize the number of rounds required to establish a shared key.
 In the worst case, it requires two RTTs between a consumer and producer to establish
-a shared key. In the best case, no RTTs are required (i.e., a consumer may start)
-transmitting messages right away. This specification is only to derive keys. It
-does not specify how those keys are used.
+a shared key. In the best case, one RTT is required before sending any application
+data. This document outlines how to derive the keys used to encrypt traffic for
+a session and shows how session information is exchanged between a consumer
+and producer using message encapsulation. 
 
 --- middle
 

@@ -5,8 +5,8 @@
 icnrg                                                           M. Mosko
 Internet-Draft                                                   E. Uzun
 Intended status: Standards Track                                 C. Wood
-Expires: October 1, 2016                                            PARC
-                                                          March 30, 2016
+Expires: October 2, 2016                                            PARC
+                                                          March 31, 2016
 
 
                  CCNx Key Exchange Protocol Version 1.0
@@ -21,10 +21,11 @@ Abstract
    message forgery between two peers.  It is also designed to minimize
    the number of rounds required to establish a shared key.  In the
    worst case, it requires two RTTs between a consumer and producer to
-   establish a shared key.  In the best case, no RTTs are required
-   (i.e., a consumer may start) transmitting messages right away.  This
-   specification is only to derive keys.  It does not specify how those
-   keys are used.
+   establish a shared key.  In the best case, one RTT is required before
+   sending any application data.  This document outlines how to derive
+   the keys used to encrypt traffic for a session and shows how session
+   information is exchanged between a consumer and producer using
+   message encapsulation.
 
 Status of This Memo
 
@@ -41,23 +42,24 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on October 1, 2016.
+   This Internet-Draft will expire on October 2, 2016.
 
 Copyright Notice
 
    Copyright (c) 2016 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
 
-   This document is subject to BCP 78 and the IETF Trust's Legal
-   Provisions Relating to IETF Documents
 
 
 
-Mosko, et al.            Expires October 1, 2016                [Page 1]
+
+Mosko, et al.            Expires October 2, 2016                [Page 1]
 
 Internet-Draft                   CCNxKE                       March 2016
 
 
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents
    (http://trustee.ietf.org/license-info) in effect on the date of
    publication of this document.  Please review these documents
    carefully, as they describe your rights and restrictions with respect
@@ -68,9 +70,9 @@ Internet-Draft                   CCNxKE                       March 2016
 
 Table of Contents
 
-   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   3
      1.1.  Conventions and Terminology . . . . . . . . . . . . . . .   4
-   2.  Goals . . . . . . . . . . . . . . . . . . . . . . . . . . . .   5
+   2.  Goals . . . . . . . . . . . . . . . . . . . . . . . . . . . .   6
    3.  Scope . . . . . . . . . . . . . . . . . . . . . . . . . . . .   6
    4.  Presentation Language . . . . . . . . . . . . . . . . . . . .   7
    5.  CCNxKE Overview . . . . . . . . . . . . . . . . . . . . . . .   7
@@ -101,18 +103,21 @@ Table of Contents
      13.2.  Informative References . . . . . . . . . . . . . . . . .  27
    Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  27
 
+
+
+
+
+
+
+Mosko, et al.            Expires October 2, 2016                [Page 2]
+
+Internet-Draft                   CCNxKE                       March 2016
+
+
 1.  Introduction
 
    DISCLAIMER: This is a WIP draft of CCNxKE and has not yet seen
    rigorous security analysis.
-
-
-
-
-Mosko, et al.            Expires October 1, 2016                [Page 2]
-
-Internet-Draft                   CCNxKE                       March 2016
-
 
    Ephemeral sessions similar to those enabled by TLS 1.3 [TLS13], QUIC
    [QUIC], and DTLS 1.2 [DTLS12] are needed for some CCN exchanges
@@ -157,19 +162,19 @@ Internet-Draft                   CCNxKE                       March 2016
 
    CCNxKE also introduces a new type of cookie based on reverse hash
    chains [HASHCHAIN] to help limit the amount of significant server
+
+
+
+Mosko, et al.            Expires October 2, 2016                [Page 3]
+
+Internet-Draft                   CCNxKE                       March 2016
+
+
    work done in response to a client or consumer Interest.  TCP-based
    protocols, such as TLS [TLS13], use the TCP 3-way handshake for such
    proof.  UDP-based protocols, such as QUIC [QUIC] and DTLS 1.2
    [DTLS12], use an optional session address token or cookie that must
    be presented by the client (consumer) to prove ownership of an
-
-
-
-Mosko, et al.            Expires October 1, 2016                [Page 3]
-
-Internet-Draft                   CCNxKE                       March 2016
-
-
    address during a key exchange procedure.  Without source addresses,
    our cookie technique ensures that the same entity which requested
    server information, e.g., the public configuration data, is the same
@@ -213,18 +218,18 @@ Internet-Draft                   CCNxKE                       March 2016
    Connection: A network path of n >= 1 hops between the consumer and
    producer.
 
+
+
+
+Mosko, et al.            Expires October 2, 2016                [Page 4]
+
+Internet-Draft                   CCNxKE                       March 2016
+
+
    Endpoint: Either the consumer or producer of the connection.
 
    Handshake: A series of message exchanges between two peers that is
    used to perform a task (e.g., perform key exchange and derivation).
-
-
-
-
-Mosko, et al.            Expires October 1, 2016                [Page 4]
-
-Internet-Draft                   CCNxKE                       March 2016
-
 
    Session: An association between a consumer and a producer resulting
    from a CCNxKE handshake.
@@ -265,6 +270,18 @@ Internet-Draft                   CCNxKE                       March 2016
 
    HKDF: Hash-based key-derivation function [RFC5869].
 
+
+
+
+
+
+
+
+Mosko, et al.            Expires October 2, 2016                [Page 5]
+
+Internet-Draft                   CCNxKE                       March 2016
+
+
 2.  Goals
 
    The goals of the CCNxKE protocol, in order of priority, are as
@@ -274,14 +291,6 @@ Internet-Draft                   CCNxKE                       March 2016
        establish a session and all related shared secrets between two
        peers.  Cryptographic properties of interest include: (a)
        forward-secure session key derivation and (b) (state and
-
-
-
-Mosko, et al.            Expires October 1, 2016                [Page 5]
-
-Internet-Draft                   CCNxKE                       March 2016
-
-
        computational) denial-of-service prevention at the producer (see
        [RFC4987]) that is no worse than DTLS 1.2 [DTLS12]}. For property
        (a), different keys (and relevant algorithm parameters such as
@@ -320,6 +329,15 @@ Internet-Draft                   CCNxKE                       March 2016
    related protocols are made for brevity and technical clarity.  This
    document is intended primarily for readers who will be implementing
    the protocol and for those doing cryptographic analysis of it.  The
+
+
+
+
+Mosko, et al.            Expires October 2, 2016                [Page 6]
+
+Internet-Draft                   CCNxKE                       March 2016
+
+
    specification has been written with this in mind and it is intended
    to reflect the needs of those two groups.
 
@@ -327,16 +345,6 @@ Internet-Draft                   CCNxKE                       March 2016
    definition or of interface definition, although it does cover select
    areas of policy as they are required for the maintenance of solid
    security.
-
-
-
-
-
-
-Mosko, et al.            Expires October 1, 2016                [Page 6]
-
-Internet-Draft                   CCNxKE                       March 2016
-
 
 4.  Presentation Language
 
@@ -378,21 +386,19 @@ Internet-Draft                   CCNxKE                       March 2016
    For example, a consumer may use an initial name like '/parc/
    index.html' that works like an IP any cast address and could got to
    one of several systems.  CCNxKE allows the responding endpoint to
+
+
+
+Mosko, et al.            Expires October 2, 2016                [Page 7]
+
+Internet-Draft                   CCNxKE                       March 2016
+
+
    include a localized name to ensure that subsequent messages from the
    consumer come back to the same producer.  CCNxKE also allows the key
    exchange peer to securely hand-off the session to a content producer
    peer via another name and session token once the client is
    authenticated and keying material is exchanged.
-
-
-
-
-
-
-Mosko, et al.            Expires October 1, 2016                [Page 7]
-
-Internet-Draft                   CCNxKE                       March 2016
-
 
 5.3.  Re-Transmissions, Timeouts, and Replay Prevention
 
@@ -436,20 +442,20 @@ Internet-Draft                   CCNxKE                       March 2016
    The following assumptions are made about peers participating in the
    CCNxKE protocol:
 
+
+
+
+Mosko, et al.            Expires October 2, 2016                [Page 8]
+
+Internet-Draft                   CCNxKE                       March 2016
+
+
    -  Consumers know the namespace prefix of the producer for which they
       wish to execute the CCNxKE protocol.
 
    -  CCNxKE protocol information is carried in a distinguished field
       outside of the payload of CCN messages.  This is done to
       distinguish key exchange material with application data in a
-
-
-
-Mosko, et al.            Expires October 1, 2016                [Page 8]
-
-Internet-Draft                   CCNxKE                       March 2016
-
-
       message.  This is necessary for 0 RTT packets that carry both
       keying material and application payload.
 
@@ -490,6 +496,16 @@ Internet-Draft                   CCNxKE                       March 2016
    -  Ephemeral Secret (ES): A secret which is derived from both the
       client and server ephemeral key shares.
 
+
+
+
+
+
+Mosko, et al.            Expires October 2, 2016                [Page 9]
+
+Internet-Draft                   CCNxKE                       March 2016
+
+
    Depending on the mode in which CCNxKE is used, these secrets can be
    established in a variety of ways.  Key derivation details are
    outlined in Section Section 9.
@@ -498,13 +514,6 @@ Internet-Draft                   CCNxKE                       March 2016
    [RFC4086].  An overview of the messages sent in each of the three
    rounds to establish and use these secrets is shown in Figure Figure 1
    below.  This diagram omits some parts of each message for brevity.
-
-
-
-Mosko, et al.            Expires October 1, 2016                [Page 9]
-
-Internet-Draft                   CCNxKE                       March 2016
-
 
        Consumer                                           Producer
 
@@ -545,6 +554,14 @@ Internet-Draft                   CCNxKE                       March 2016
                          I[/prefix/SessionID/[...]]
                                -------->
                                                     + NewSessionID*
+
+
+
+Mosko, et al.            Expires October 2, 2016               [Page 10]
+
+Internet-Draft                   CCNxKE                       March 2016
+
+
                                                  + NewSessionIDTag*
                                                            Payload:
                                                      [ProducerData]
@@ -554,14 +571,6 @@ Internet-Draft                   CCNxKE                       March 2016
        (Repeat with data)      <-------->       (Repeat with data)
 
                *  Indicates optional or situation-dependent
-
-
-
-Mosko, et al.            Expires October 1, 2016               [Page 10]
-
-Internet-Draft                   CCNxKE                       March 2016
-
-
                   messages that are not always sent.
 
                {} Indicates messages protected using keys
@@ -601,22 +610,18 @@ Internet-Draft                   CCNxKE                       March 2016
    that end, the format of the Round 1 message is trivial.  First, the
    client issues an Interest with the following name
 
+
+
+
+Mosko, et al.            Expires October 2, 2016               [Page 11]
+
+Internet-Draft                   CCNxKE                       March 2016
+
+
        /prefix/random-1
 
    where random-1 is a randomly generated 64-bit nonce.  This interest
    carries a KEPayload with the following information:
-
-
-
-
-
-
-
-
-Mosko, et al.            Expires October 1, 2016               [Page 11]
-
-Internet-Draft                   CCNxKE                       March 2016
-
 
    +-----------------+-------------------------------------+-----------+
    | HELLO Field     | Description                         | Optional? |
@@ -664,12 +669,7 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-
-
-
-
-
-Mosko, et al.            Expires October 1, 2016               [Page 12]
+Mosko, et al.            Expires October 2, 2016               [Page 12]
 
 Internet-Draft                   CCNxKE                       March 2016
 
@@ -725,7 +725,7 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 1, 2016               [Page 13]
+Mosko, et al.            Expires October 2, 2016               [Page 13]
 
 Internet-Draft                   CCNxKE                       March 2016
 
@@ -781,7 +781,7 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 1, 2016               [Page 14]
+Mosko, et al.            Expires October 2, 2016               [Page 14]
 
 Internet-Draft                   CCNxKE                       March 2016
 
@@ -837,7 +837,7 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 1, 2016               [Page 15]
+Mosko, et al.            Expires October 2, 2016               [Page 15]
 
 Internet-Draft                   CCNxKE                       March 2016
 
@@ -893,7 +893,7 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 1, 2016               [Page 16]
+Mosko, et al.            Expires October 2, 2016               [Page 16]
 
 Internet-Draft                   CCNxKE                       March 2016
 
@@ -949,7 +949,7 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 1, 2016               [Page 17]
+Mosko, et al.            Expires October 2, 2016               [Page 17]
 
 Internet-Draft                   CCNxKE                       March 2016
 
@@ -1005,7 +1005,7 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 1, 2016               [Page 18]
+Mosko, et al.            Expires October 2, 2016               [Page 18]
 
 Internet-Draft                   CCNxKE                       March 2016
 
@@ -1061,7 +1061,7 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 1, 2016               [Page 19]
+Mosko, et al.            Expires October 2, 2016               [Page 19]
 
 Internet-Draft                   CCNxKE                       March 2016
 
@@ -1117,7 +1117,7 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 1, 2016               [Page 20]
+Mosko, et al.            Expires October 2, 2016               [Page 20]
 
 Internet-Draft                   CCNxKE                       March 2016
 
@@ -1173,7 +1173,7 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 1, 2016               [Page 21]
+Mosko, et al.            Expires October 2, 2016               [Page 21]
 
 Internet-Draft                   CCNxKE                       March 2016
 
@@ -1229,7 +1229,7 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 1, 2016               [Page 22]
+Mosko, et al.            Expires October 2, 2016               [Page 22]
 
 Internet-Draft                   CCNxKE                       March 2016
 
@@ -1285,7 +1285,7 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 1, 2016               [Page 23]
+Mosko, et al.            Expires October 2, 2016               [Page 23]
 
 Internet-Draft                   CCNxKE                       March 2016
 
@@ -1341,7 +1341,7 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 1, 2016               [Page 24]
+Mosko, et al.            Expires October 2, 2016               [Page 24]
 
 Internet-Draft                   CCNxKE                       March 2016
 
@@ -1397,7 +1397,7 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 1, 2016               [Page 25]
+Mosko, et al.            Expires October 2, 2016               [Page 25]
 
 Internet-Draft                   CCNxKE                       March 2016
 
@@ -1453,7 +1453,7 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 1, 2016               [Page 26]
+Mosko, et al.            Expires October 2, 2016               [Page 26]
 
 Internet-Draft                   CCNxKE                       March 2016
 
@@ -1509,4 +1509,4 @@ Authors' Addresses
 
 
 
-Mosko, et al.            Expires October 1, 2016               [Page 27]
+Mosko, et al.            Expires October 2, 2016               [Page 27]
