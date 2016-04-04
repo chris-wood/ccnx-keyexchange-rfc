@@ -170,7 +170,7 @@ In the worst case, it requires two RTTs between a consumer and producer to estab
 a shared key. In the best case, one RTT is required before sending any application
 data. This document outlines how to derive the keys used to encrypt traffic for
 a session and shows how session information is exchanged between a consumer
-and producer using message encapsulation. 
+and producer using message encapsulation.
 
 --- middle
 
@@ -476,26 +476,27 @@ diagram omits some parts of each message for brevity.
                                                     HELLO-REJECT:
                                                       + Timestamp
                                                    + SourceCookie
+                                                 + pinned-prefix*
                                                + ServerChallenge*
                                            + ServerConfiguration*
 
-                       CO[/prefix/random-1]
+                      CO[/prefix/random-1]
                             <---------
     FULL-HELLO:
     + ClientKeyShare
     + SourceCookie
     + SourceProof
     + Timestamp
-                       I[/prefix/random-2]
+                    I[/pinned-prefix/random-2]
                              -------->
                                                     HELLO-ACCEPT:
                                                  + ServerKeyShare
                                                       + SessionID
-                                          + {CertificateRequest*}
-                                           + {CertificateVerify*}
-                                     + {MovePrefix*, MoveToken)*}
-                                                     + {Finished}
-                       CO[/prefix/random-2]
+                                          + [CertificateRequest*]
+                                           + [CertificateVerify*]
+                                     + [MovePrefix*, MoveToken)*]
+                                                     + [Finished]
+                    CO[/pinned-prefix/random-2]
                             <--------
                     **key exchange complete**
     Payload:
@@ -512,7 +513,7 @@ diagram omits some parts of each message for brevity.
                      CO[/prefix/SessionID/[...]]
                             <--------
 
-    (Repeat with data)      <-------->       (Repeat with data)
+    Repeat with data        <-------->        Repeat with data
 
             *  Indicates optional or situation-dependent
                messages that are not always sent.
@@ -571,8 +572,14 @@ KEPayload has the following fields:
 | HELLO-REJECT Field | Description | Optional? |
 | Timestamp | Current server timestamp | No |
 | SourceCookie | A cookie that binds the consumer's challenge to the current timestamp | No |
+| PinnedPrefix | A new prefix that pins the key exchange to a particular server | Yes |
 | ServerConfiguration | The public server configuration information | Yes |
 | ServerChallenge | A random value for the consumer to include in its CertificateVerify if the server requires client authentication | Yes |
+
+The Timestamp and SourceCookie are used in Round 2. Their derivation is described later.
+If the server provides a PinnedPrefix then the consumer must use this prefix in Round 2
+in lieu of the Round 1 name prefix. (This is because the PinnedPrefix identifies a particular
+endpoint that is capable of completing the key exchange.)
 
 The ServerConfiguration information is a semi-static catalog of information that consumers may
 use to complete future key exchanges with the producer. The fields of the ServerConfiguration
@@ -747,16 +754,16 @@ HELLO:
                                                     HELLO-ACCEPT:
                                                  + ServerKeyShare
                                                       + SessionID
-                                              + {ServerExtensions}
+                                              + [ServerExtensions]
                                               + [ResumptionCookie]
-                                           + {CertificateRequest*}
-                                            + {CertificateVerify*}
-                                       + {MovePrefix*, MoveToken*}
-                                                      + {Finished}
+                                           + [CertificateRequest*]
+                                            + [CertificateVerify*]
+                                       + [MovePrefix*, MoveToken*]
+                                                      + [Finished]
                        CO[/prefix/random-2]
                             <--------
                     **key exchange complete**
-    (Send encrypted data)   <-------->   (Send encrypted data)
+    Send encrypted data   <-------->   Send encrypted data
 
             *  Indicates optional or situation-dependent
                messages that are not always sent.
@@ -798,14 +805,14 @@ MUST issue a new SessionID and ResumptionCookie for future use with the client.
                                                     HELLO-ACCEPT:
                                                  + ServerKeyShare
                                                       + SessionID
-                                              + {ServerExtensions}
+                                              + [ServerExtensions]
                                               + [ResumptionCookie]
-                                       + {MovePrefix*, MoveToken*}
-                                                      + {Finished}
+                                       + [MovePrefix*, MoveToken*]
+                                                      + [Finished]
                        CO[/prefix/random-2]
                             <--------
                     **key exchange complete**
-    (Send encrypted data)   <-------->   (Send encrypted data)
+    Send encrypted data   <-------->   Send encrypted data
 
             *  Indicates optional or situation-dependent
                messages that are not always sent.
