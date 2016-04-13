@@ -864,6 +864,9 @@ verifies the following equality:
 If this check passes, then the server continues with the computationally expensive
 part of the key exchange protocol.
 
+To avoid replays of the SourceProof and SourceCookie, a producer SHOULD keep a sliding
+window of previously received tuples. 
+
 ## Move Derivation
 
 The MoveChallenge and MoveProof are computed identically to the SourceChallenge
