@@ -486,6 +486,7 @@ diagram omits some parts of each message for brevity.
     + ClientKeyShare
     + SourceCookie
     + SourceProof
+    + MoveChallenge
     + Timestamp
                     I[/pinned-prefix/random-2]
                              -------->
@@ -494,7 +495,7 @@ diagram omits some parts of each message for brevity.
                                                       + SessionID
                                           + [CertificateRequest*]
                                            + [CertificateVerify*]
-                                     + [MovePrefix*, MoveToken)*]
+                                      + [MovePrefix*, MoveToken*]
                                                      + [Finished]
                     CO[/pinned-prefix/random-2]
                             <--------
@@ -540,7 +541,7 @@ a JSON object, e.g.,
 {
     "ClientKeyShare" : 0xaa,
     "SourceCookie" : 0xbb,
-    "SourceProof" : 0xbb,
+    "SourceProof" : 0xcc,
     ...
 }
 
@@ -634,8 +635,8 @@ forward-secure key used for future communication. It is assumed that
 the consumer already has the ServerConfiguration information that is provided from
 the producer in Round 1. It is also assumed that the consumer has a
 
-Moreover, assume that nonce2 is a ephemeral nonce provided by the
-producer in Round 1. Then, the consumer issues an Interest with the following name:
+Assuming that /prefix is the prefix established after Round 1, then the consumer
+issues an Interest with the following name:
 
 ~~~
     /prefix/random-2
@@ -650,7 +651,6 @@ and a KEPayload with the following information:
 | Timestamp | The timestamp provided by the server in Round 1 | No |
 | ConsumerPrefix | The consumer's prefix that can be used for the producer to send interests to the consumer | Yes |
 | PreSharedKey | A pre-shared key that can be configured between a consumer and producer | Yes |
-| ResumptionCookie | The ResumptionCookie derived from a past session | Yes |
 | {MoveChallenge} | A move challenge generated identically to the SourceChallenge | Yes |
 | {AlgChoice} | Algorithm (KEXS and AEAD) options choice (a list of tags echoed from the ServerConfiguration) | No |
 | {Proof} | Proof of demand (i.e., a sorted list of types of proof the consumer will expect) | No |
@@ -658,15 +658,15 @@ and a KEPayload with the following information:
 | {ConsumerData} | Application data encrypted under a key derived from SS (in a 1-RTT exchange) | Yes |
 | ServerNameIndication | A server name indication (as a CCNxName) defined in Section 3 of {{RFC6066}} | Yes |
 | Certificate | The client's certificate | Yes |
-| CertificateVerify | A signature generated over the entire FULL-HELLO message | Yes |
 
-((TODO: provide more details about each of these fields))
+The client may optionally sign this interest. If so, the client MUST provide its certificate
+in the Certificate field which contains the key used to verify this signature.
 
 Upon receipt of this interest, the producer performs the DH computation
 to compute ES and SS, decrypts all protected fields in the consumer's KEPayload, and validates the
 algorithm choice selection (AlgChoice). If any of these steps fail, the producer
 replies with with a HELLO-REJECT Content Object whose KEPayload contains
-a REJ flag and the reason of the error. The REJ flag and value are encrypted
+a REJECT flag and the reason of the error. The REJECT flag and value are encrypted
 by the SS (if possible).
 
 If the above steps complete without failure or error, then the producer responds with a
@@ -677,12 +677,14 @@ Content Object whose KEPayload has the following fields:
 | ServerKeyShare | Server's key share for the ES derivation | No |
 | {ServerExtensions} | Additional extensions provided by the server, encrypted under ES | Yes |
 | [ResumptionCookie] | Resumption cookie encrypted under a TS-derived key | Yes |
-| {(MovePrefix,MoveToken)} | Third CCNxName prefix and token to use when moving to session establishment | Yes |
-| CertificateRequest* | Server certificate that matches the type of proof provided by the client | Yes |
-| CertificateVerify* | Signature generated over the entire HELLO-ACCEPT message | Yes |
+| {MovePrefix} | CCNxName prefix to use when moving to session establishment | Yes |
+| {MoveToken} | A token to use when migrating to the given MovePrefix | Yes | 
+| Certificate | Server certificate that matches the type of proof provided by the client | Yes |
 
 If a MovePrefix and MoveToken tuple is provided then in the HELLO-ACCEPT message then
-a CertificateVerify (signature) MUST also be provided in the response.
+a CertificateVerify (signature) MUST also be provided in the response. The server response
+is always signed and the verification key may be obtained from either the content object
+ValidationAlgorithm data or the server-provided Certificate field. 
 
 ## Round 3
 
@@ -690,24 +692,17 @@ In Round 3, the consumer sends interests whose name and optional Payload are
 encrypted using one of the forward-secure keys derived after Round 2. In normal operation,
 the producer will respond with Content Objects whose Payloads are encrypted using
 a different forward-secure key. That is, interests and Content Objects are encrypted
-and authenticated using two separate keys. The producer may also optionally provide
-a new resumption cookie (RC) with a Content Object response. This is used to keep
-the consumer's resumption cookie fresh and to also support 0 RTT resumption. In this
-case, the producer's Content Object response has the following fields:
+and authenticated using two separate keys. 
 
 * Payload: the actual Content Object payload data encrypted with the producer's
 forward-secure key.
 
-* ResumptionCookie: A new resumption cookie to be used for resuming this session in the future.
-
-The producer is free to choose the frequency at which new resumption cookies are
-issued to the consumer.
-
-The producer may also reply with a new SessionID. This is done if the client presented
+The producer may also reply with a new SessionID. This MUST be done if the client presented
 a MoveToken and MoveProof. A NewSessionID must be accompanied with a NewSessionIDTag,
 which is equal to the HMAC of NewSessionID computed with the traffic-secret key.
 A client MUST then use NewSessionID instead of SessionID after verifying the
-NewSessionIDTag.
+NewSessionIDTag. If the client server did not provide a MoveToken in Round 2, then
+the server in Round 3 MAY still provide a NewSessionID, but doing so is not required.
 
 # Alternative Exchanges
 
@@ -747,7 +742,6 @@ HELLO:
     + SourceProof
     + Timestamp
     + Certificate*
-    + CertificateVerify*
     + {ConsumerData*}
                        I[/prefix/random-2]
                              -------->
@@ -755,9 +749,8 @@ HELLO:
                                                  + ServerKeyShare
                                                       + SessionID
                                               + [ServerExtensions]
-                                              + [ResumptionCookie]
+                                                  + [PreSharedKey]
                                            + [CertificateRequest*]
-                                            + [CertificateVerify*]
                                        + [MovePrefix*, MoveToken*]
                                                       + [Finished]
                        CO[/prefix/random-2]
@@ -781,12 +774,12 @@ HELLO:
 
 As with TLS, the initial application data is protected with the
 
-# Resumption and PSK Mode
+# PSK Mode and Session Resumption
 
-In this mode, the client uses its ResumptionCookie to re-create a previous
+In this mode, the client uses its PreSharedKey to re-create a previous
 session. The client also provides a key share in case the server opts to fall back
-and establish a fresh key. If the server accepts the ResumptionCookie then it
-MUST issue a new SessionID and ResumptionCookie for future use with the client.
+and establish a fresh key. If the server accepts the PreSharedKey, then the security
+context from the previous session is resumed.
 
 ~~~
     Consumer                                           Producer
@@ -799,14 +792,13 @@ MUST issue a new SessionID and ResumptionCookie for future use with the client.
     + SourceProof
     + Timestamp
     + PreSharedKey
-    + ResumptionCookie
                        I[/prefix/random-2]
                              -------->
                                                     HELLO-ACCEPT:
+                                                   + PreSharedKey
                                                  + ServerKeyShare
                                                       + SessionID
                                               + [ServerExtensions]
-                                              + [ResumptionCookie]
                                        + [MovePrefix*, MoveToken*]
                                                       + [Finished]
                        CO[/prefix/random-2]
@@ -865,23 +857,23 @@ If this check passes, then the server continues with the computationally expensi
 part of the key exchange protocol.
 
 To avoid replays of the SourceProof and SourceCookie, a producer SHOULD keep a sliding
-window of previously received tuples. 
+window of previously received tuples.
 
-## Move Derivation
+## MoveToken Derivation
 
 The MoveChallenge and MoveProof are computed identically to the SourceChallenge
 and SourceProof. The MoveToken, however, is left as an opaque bit string. Extensions
 may be specified to describe how to compute this value.
 
-## SessionID and ResumptionCookie Properties, Derivation, and Usage
+## SessionID and PreSharedKey Properties, Derivation, and Usage
 
-The purpose of the session identifier SessionID is to uniquely
+The purpose of the session identifier SessionID and PreSharedKey are to uniquely
 identify a single session for the producer and consumer. A Producer MAY use
-a random bit string or MAY use the method described in this section or MAY
+a random bit string for both or MAY use the method described in this section or MAY
 use another proprietary method to distinguish clients.
 
 We provide a more secure creation of the SessionID since it is used
-with the ResumptionCookie derivation (defined later). Specifically,
+with the PreSharedKey derivation (defined later). Specifically,
 the SessionID is derived as the encryption of the hash digest of a server
 secret, TS, and an optional prefix (e.g., MovePrefix).
 
@@ -900,23 +892,23 @@ of the server secret, TS, and the optional (MovePrefix, MoveToken) tuple
 (if created for the session). The producer must use a long-term secret key
 for this encryption. Mechanically, this derivation is:
 
-    ResumptionCookie = Enc(k2, TS || ( (Prefix3 || MoveToken) )),
+    PreSharedKey = Enc(k2, TS || ( (Prefix3 || MoveToken) )),
 
 where k2 is again a long-term producer key. Note that it may be the case that
 k1 = k2 (see above), though this is not required.
 
-With this SessionID and ResumptionCookie, the consumer then resumes a session by providing
-both the SessionID and ResumptionCookie to the producer. This is done to prove to the producer that
-the consumer who knows the SessionID is also in possession of the correct ResumptionCookie.
+With this SessionID and PreSharedKey, the consumer then resumes a session by providing
+both the SessionID and PreSharedKey to the producer. This is done to prove to the producer that
+the consumer who knows the SessionID is also in possession of the correct PreSharedKey.
 The producer verifies this by computing
 
-    (TS || ( (Prefix3 || MoveToken) )) = Dec(k2, ResumptionCookie)
+    (TS || ( (Prefix3 || MoveToken) )) = Dec(k2, PreSharedKey)
 
 and checking the following equality
 
     SessionID = Enc(k1, H(TS || (Prefix3)))
 
-If equality holds, the producer uses the TS recovered from ResumptionCookie to
+If equality holds, the producer uses the TS recovered from PreSharedKey to
 re-initialize the previous session with the consumer.
 
 ## Key Derivation
@@ -930,18 +922,12 @@ from that, the traffic secret (TS). These dependencies are shown below.
 | KE-1 |           | KE-2 |
 +------+           +----+-+
     |                   |
-    |                   |
-    |                   |
 +---v--+           +----v-+
 |  SS  +---+    +--+  ES  |
 +------+   |    |  +------+
-           |    |
-           |    |
          +-v----v-|
          |   MK   |
          +---+----+
-             |
-             |
              |
            +-v--+
            | TS |
@@ -975,8 +961,11 @@ They are repeated here for posterity.
 6. traffic_secret_0 = HKDF-Expand-Label(master_secret, "traffic secret", handshake_hash, L)
 
 In all computations, the value "handshake_hash" is defined as the SHA256 hash
-digest of all CCNxKE messages contained up to the point of derivation. More details
-are given in Section 7.3.1 of {{TLS13}}.
+digest of all CCNxKE messages concatenated up to the point of derivation. For example,
+the "handshake_hash" used to derive the ES after Round 2 is the hash of the 
+wire-encoded messages (i.e., interest and content object) in Round 1 and Round 2. 
+These will be available to both the consumer and producer since the same peers are
+involved in both rounds. More details are given in Section 7.3.1 of {{TLS13}}.
 
 Updating the traffic secret using the re-key message (defined later) increments
 traffic_secret_N to traffic_secret_(N+1). This update procedure works as follows:
@@ -997,7 +986,6 @@ the forward-secure TS. The following table enumerates the values for "phase",
 and "handshake_context" to be used when defining keys for different purposes.
 
 | Record Type | Secret | Phase | Handshake Context |
-| 1-RTT Handshake | xSS | "early handshake key expansion" | HELLO + ServerConfiguration + Server Certificate |
 | 1-RTT Data | xSS | "early application data key expansion" | HELLO + ServerConfiguration + Server Certificate |
 | Application Data | TS | "application data key expansion" | HELLO ... Finished |
 
@@ -1009,6 +997,8 @@ generation of each secret.
 | Server Write Key | "server write key" |
 | Client Write IV  | "client write IV"  |
 | Server Write IV  | "server write IV"  |
+| Client Migration Token | "client migration token" |
+| Server Migration Token | "server migration token" |
 
 (( TODO: should we add examples for each of the above variants? ))
 
@@ -1017,21 +1007,14 @@ generation of each secret.
 Either the client and server can trigger a key update by sending an Interest or
 Content Object with a KEPayload field containing the flag KeyUpdate. The KEPayload
 will be encrypted by the traffic key. Upon receipt, the recipient MUST update the
-traffic secret as defined above and re-compute the traffic encryption and authentication
-keys. The previous traffic key must be securely discarded.
+traffic secret as defined above and re-compute the traffic keys. The previous 
+traffic key must then be securely discarded.
 
 # Application Data Protocol
 
 Once traffic keys and the associated IVs are derived from the CCNxKE protocol,
 all subsequent Interest and Content Object messages are encrypted. Packet encryption
-uses the TLV encapsulation mechanism specified in {{TLVENCAP}}. For Interest
-encryption, the Salt in {{TLVENCAP}} is set to the packet sequence number.
-The same substitution is done for Content Object encryption. Similarly, the
-KeyId field is substituted with the SessionID derived by the CCNxKE protocol.
-Packet sequence numbers are 64-bit numbers initialized to 0 when after the
-traffic secret is calculated. Each message increments and uses the sequence
-number when sending a new datagram (Interest). The sequence number for an Interest
-matches that of the Content Object response.
+uses the TLV encapsulation mechanism specified in {{TLVENCAP}}. 
 
 # Security Considerations
 
@@ -1044,4 +1027,4 @@ algorithm supported, and only trustworthy cryptographic functions should be
 used. Short public keys and anonymous servers should be used with great
 caution. Implementations and users must be careful when deciding which
 certificates and certificate authorities are acceptable; a dishonest
-certificate authority can do tremendous damage.
+certificate authority can cause tremendous damage.
