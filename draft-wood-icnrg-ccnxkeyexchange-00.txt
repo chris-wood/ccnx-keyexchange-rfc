@@ -5,12 +5,12 @@
 icnrg                                                           M. Mosko
 Internet-Draft                                                   E. Uzun
 Intended status: Standards Track                                 C. Wood
-Expires: October 2, 2016                                            PARC
-                                                          March 31, 2016
+Expires: January 9, 2017                                            PARC
+                                                           July 08, 2016
 
 
                  CCNx Key Exchange Protocol Version 1.0
-                     draft-wood-ccnxkeyexchange-01
+                  draft-wood-icnrg-ccnxkeyexchange-00
 
 Abstract
 
@@ -42,7 +42,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on October 2, 2016.
+   This Internet-Draft will expire on January 9, 2017.
 
 Copyright Notice
 
@@ -53,9 +53,9 @@ Copyright Notice
 
 
 
-Mosko, et al.            Expires October 2, 2016                [Page 1]
+Mosko, et al.            Expires January 9, 2017                [Page 1]
 
-Internet-Draft                   CCNxKE                       March 2016
+Internet-Draft                   CCNxKE                        July 2016
 
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -86,13 +86,13 @@ Table of Contents
      6.3.  Round 2 . . . . . . . . . . . . . . . . . . . . . . . . .  14
      6.4.  Round 3 . . . . . . . . . . . . . . . . . . . . . . . . .  16
    7.  Alternative Exchanges . . . . . . . . . . . . . . . . . . . .  17
-     7.1.  One-RTT Exchange  . . . . . . . . . . . . . . . . . . . .  18
-   8.  Resumption and PSK Mode . . . . . . . . . . . . . . . . . . .  19
-   9.  Secret Derivation . . . . . . . . . . . . . . . . . . . . . .  20
+     7.1.  One-RTT Exchange  . . . . . . . . . . . . . . . . . . . .  17
+   8.  PSK Mode and Session Resumption . . . . . . . . . . . . . . .  18
+   9.  Secret Derivation . . . . . . . . . . . . . . . . . . . . . .  19
      9.1.  SourceCookie Derivation . . . . . . . . . . . . . . . . .  20
-     9.2.  Move Derivation . . . . . . . . . . . . . . . . . . . . .  20
-     9.3.  SessionID and ResumptionCookie Properties, Derivation,
-           and Usage . . . . . . . . . . . . . . . . . . . . . . . .  21
+     9.2.  MoveToken Derivation  . . . . . . . . . . . . . . . . . .  20
+     9.3.  SessionID and PreSharedKey Properties, Derivation, and
+           Usage . . . . . . . . . . . . . . . . . . . . . . . . . .  21
      9.4.  Key Derivation  . . . . . . . . . . . . . . . . . . . . .  22
      9.5.  Secret Generation and Lifecycle . . . . . . . . . . . . .  23
    10. Re-Key Message  . . . . . . . . . . . . . . . . . . . . . . .  24
@@ -109,9 +109,9 @@ Table of Contents
 
 
 
-Mosko, et al.            Expires October 2, 2016                [Page 2]
+Mosko, et al.            Expires January 9, 2017                [Page 2]
 
-Internet-Draft                   CCNxKE                       March 2016
+Internet-Draft                   CCNxKE                        July 2016
 
 
 1.  Introduction
@@ -165,9 +165,9 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 2, 2016                [Page 3]
+Mosko, et al.            Expires January 9, 2017                [Page 3]
 
-Internet-Draft                   CCNxKE                       March 2016
+Internet-Draft                   CCNxKE                        July 2016
 
 
    work done in response to a client or consumer Interest.  TCP-based
@@ -221,9 +221,9 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 2, 2016                [Page 4]
+Mosko, et al.            Expires January 9, 2017                [Page 4]
 
-Internet-Draft                   CCNxKE                       March 2016
+Internet-Draft                   CCNxKE                        July 2016
 
 
    Endpoint: Either the consumer or producer of the connection.
@@ -277,9 +277,9 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 2, 2016                [Page 5]
+Mosko, et al.            Expires January 9, 2017                [Page 5]
 
-Internet-Draft                   CCNxKE                       March 2016
+Internet-Draft                   CCNxKE                        July 2016
 
 
 2.  Goals
@@ -333,9 +333,9 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 2, 2016                [Page 6]
+Mosko, et al.            Expires January 9, 2017                [Page 6]
 
-Internet-Draft                   CCNxKE                       March 2016
+Internet-Draft                   CCNxKE                        July 2016
 
 
    specification has been written with this in mind and it is intended
@@ -389,9 +389,9 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 2, 2016                [Page 7]
+Mosko, et al.            Expires January 9, 2017                [Page 7]
 
-Internet-Draft                   CCNxKE                       March 2016
+Internet-Draft                   CCNxKE                        July 2016
 
 
    include a localized name to ensure that subsequent messages from the
@@ -445,9 +445,9 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 2, 2016                [Page 8]
+Mosko, et al.            Expires January 9, 2017                [Page 8]
 
-Internet-Draft                   CCNxKE                       March 2016
+Internet-Draft                   CCNxKE                        July 2016
 
 
    -  Consumers know the namespace prefix of the producer for which they
@@ -501,9 +501,9 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 2, 2016                [Page 9]
+Mosko, et al.            Expires January 9, 2017                [Page 9]
 
-Internet-Draft                   CCNxKE                       March 2016
+Internet-Draft                   CCNxKE                        July 2016
 
 
    Depending on the mode in which CCNxKE is used, these secrets can be
@@ -524,26 +524,28 @@ Internet-Draft                   CCNxKE                       March 2016
                                                        HELLO-REJECT:
                                                          + Timestamp
                                                       + SourceCookie
+                                                    + pinned-prefix*
                                                   + ServerChallenge*
                                               + ServerConfiguration*
 
-                          CO[/prefix/random-1]
+                         CO[/prefix/random-1]
                                <---------
        FULL-HELLO:
        + ClientKeyShare
        + SourceCookie
        + SourceProof
+       + MoveChallenge
        + Timestamp
-                          I[/prefix/random-2]
+                       I[/pinned-prefix/random-2]
                                 -------->
                                                        HELLO-ACCEPT:
                                                     + ServerKeyShare
                                                          + SessionID
-                                             + {CertificateRequest*}
-                                              + {CertificateVerify*}
-                                        + {MovePrefix*, MoveToken)*}
-                                                        + {Finished}
-                          CO[/prefix/random-2]
+                                             + [CertificateRequest*]
+                                              + [CertificateVerify*]
+                                         + [MovePrefix*, MoveToken*]
+                                                        + [Finished]
+                       CO[/pinned-prefix/random-2]
                                <--------
                        **key exchange complete**
        Payload:
@@ -552,23 +554,23 @@ Internet-Draft                   CCNxKE                       March 2016
        + [ConsumerData]
 
                          I[/prefix/SessionID/[...]]
+
+
+
+Mosko, et al.            Expires January 9, 2017               [Page 10]
+
+Internet-Draft                   CCNxKE                        July 2016
+
+
                                -------->
                                                     + NewSessionID*
-
-
-
-Mosko, et al.            Expires October 2, 2016               [Page 10]
-
-Internet-Draft                   CCNxKE                       March 2016
-
-
                                                  + NewSessionIDTag*
                                                            Payload:
                                                      [ProducerData]
                         CO[/prefix/SessionID/[...]]
                                <--------
 
-       (Repeat with data)      <-------->       (Repeat with data)
+       Repeat with data        <-------->        Repeat with data
 
                *  Indicates optional or situation-dependent
                   messages that are not always sent.
@@ -594,7 +596,7 @@ Internet-Draft                   CCNxKE                       March 2016
    be structured and encoded as a JSON object, e.g.,
 
    { "ClientKeyShare" : 0xaa, "SourceCookie" : 0xbb, "SourceProof" :
-   0xbb, ... }
+   0xcc, ... }
 
    For now, we assume some valid encoding mechanism is used to give
    structure to message payloads.  Moreover, we assume that these
@@ -607,16 +609,17 @@ Internet-Draft                   CCNxKE                       March 2016
    to the initial consumer and the public configuration information
    contained in the ServerConfiguration structure.  This information is
    used in the second round when performing the actual key exchange.  To
+
+
+
+
+Mosko, et al.            Expires January 9, 2017               [Page 11]
+
+Internet-Draft                   CCNxKE                        July 2016
+
+
    that end, the format of the Round 1 message is trivial.  First, the
    client issues an Interest with the following name
-
-
-
-
-Mosko, et al.            Expires October 2, 2016               [Page 11]
-
-Internet-Draft                   CCNxKE                       March 2016
-
 
        /prefix/random-1
 
@@ -643,6 +646,9 @@ Internet-Draft                   CCNxKE                       March 2016
    |                     | consumer's challenge to the     |           |
    |                     | current timestamp               |           |
    |                     |                                 |           |
+   | PinnedPrefix        | A new prefix that pins the key  | Yes       |
+   |                     | exchange to a particular server |           |
+   |                     |                                 |           |
    | ServerConfiguration | The public server configuration | Yes       |
    |                     | information                     |           |
    |                     |                                 |           |
@@ -652,27 +658,24 @@ Internet-Draft                   CCNxKE                       March 2016
    |                     | requires client authentication  |           |
    +---------------------+---------------------------------+-----------+
 
+   The Timestamp and SourceCookie are used in Round 2.  Their derivation
+   is described later.  If the server provides a PinnedPrefix then the
+   consumer must use this prefix in Round 2 in lieu of the Round 1 name
+   prefix.  (This is because the PinnedPrefix identifies a particular
+   endpoint that is capable of completing the key exchange.)
+
    The ServerConfiguration information is a semi-static catalog of
    information that consumers may use to complete future key exchanges
+
+
+
+Mosko, et al.            Expires January 9, 2017               [Page 12]
+
+Internet-Draft                   CCNxKE                        July 2016
+
+
    with the producer.  The fields of the ServerConfiguration information
    are shown below.
-
-
-
-
-
-
-
-
-
-
-
-
-
-Mosko, et al.            Expires October 2, 2016               [Page 12]
-
-Internet-Draft                   CCNxKE                       March 2016
-
 
    +---------------------+---------------------------------+-----------+
    | ServerConfiguration | Description                     | Optional? |
@@ -717,18 +720,21 @@ Internet-Draft                   CCNxKE                       March 2016
    symmetric-key authenticated encryption after the session has been
    established.  Currently, the only supported algorithms are:
 
+
+
+
+
+
+Mosko, et al.            Expires January 9, 2017               [Page 13]
+
+Internet-Draft                   CCNxKE                        July 2016
+
+
    -  AES-GCM-(128,192,256) [GCM]: a 12-byte tag is used, where the
       first four bytes are taken from the FSK key-derivation step and
       the last eight are taken from the initial consumer nonce.
 
    -  Salsa20 [SALSA20] (stream cipher) with Poly1305 (MAC).
-
-
-
-Mosko, et al.            Expires October 2, 2016               [Page 13]
-
-Internet-Draft                   CCNxKE                       March 2016
-
 
    The key sizes and related parameters are provided with the AEAD tag
    in the CONFIG structure.
@@ -753,9 +759,8 @@ Internet-Draft                   CCNxKE                       March 2016
    information that is provided from the producer in Round 1.  It is
    also assumed that the consumer has a
 
-   Moreover, assume that nonce2 is a ephemeral nonce provided by the
-   producer in Round 1.  Then, the consumer issues an Interest with the
-   following name:
+   Assuming that /prefix is the prefix established after Round 1, then
+   the consumer issues an Interest with the following name:
 
        /prefix/random-2
 
@@ -773,27 +778,24 @@ Internet-Draft                   CCNxKE                       March 2016
    | SourceProof          | The SourceCookie construction  | No        |
    |                      | proof provided by the client   |           |
    |                      |                                |           |
+
+
+
+Mosko, et al.            Expires January 9, 2017               [Page 14]
+
+Internet-Draft                   CCNxKE                        July 2016
+
+
    | Timestamp            | The timestamp provided by the  | No        |
    |                      | server in Round 1              |           |
    |                      |                                |           |
    | ConsumerPrefix       | The consumer's prefix that can | Yes       |
    |                      | be used for the producer to    |           |
-
-
-
-Mosko, et al.            Expires October 2, 2016               [Page 14]
-
-Internet-Draft                   CCNxKE                       March 2016
-
-
    |                      | send interests to the consumer |           |
    |                      |                                |           |
    | PreSharedKey         | A pre-shared key that can be   | Yes       |
    |                      | configured between a consumer  |           |
    |                      | and producer                   |           |
-   |                      |                                |           |
-   | ResumptionCookie     | The ResumptionCookie derived   | Yes       |
-   |                      | from a past session            |           |
    |                      |                                |           |
    | {MoveChallenge}      | A move challenge generated     | Yes       |
    |                      | identically to the             |           |
@@ -820,65 +822,64 @@ Internet-Draft                   CCNxKE                       March 2016
    |                      | of [RFC6066]                   |           |
    |                      |                                |           |
    | Certificate          | The client's certificate       | Yes       |
-   |                      |                                |           |
-   | CertificateVerify    | A signature generated over the | Yes       |
-   |                      | entire FULL-HELLO message      |           |
    +----------------------+--------------------------------+-----------+
 
-   ((TODO: provide more details about each of these fields))
+   The client may optionally sign this interest.  If so, the client MUST
+   provide its certificate in the Certificate field which contains the
+   key used to verify this signature.
 
    Upon receipt of this interest, the producer performs the DH
    computation to compute ES and SS, decrypts all protected fields in
    the consumer's KEPayload, and validates the algorithm choice
    selection (AlgChoice).  If any of these steps fail, the producer
    replies with with a HELLO-REJECT Content Object whose KEPayload
-   contains a REJ flag and the reason of the error.  The REJ flag and
-   value are encrypted by the SS (if possible).
 
 
 
-Mosko, et al.            Expires October 2, 2016               [Page 15]
+
+Mosko, et al.            Expires January 9, 2017               [Page 15]
 
-Internet-Draft                   CCNxKE                       March 2016
+Internet-Draft                   CCNxKE                        July 2016
 
+
+   contains a REJECT flag and the reason of the error.  The REJECT flag
+   and value are encrypted by the SS (if possible).
 
    If the above steps complete without failure or error, then the
    producer responds with a Content Object whose KEPayload has the
    following fields:
 
-   +--------------------------+----------------------------+-----------+
-   | HELLO-ACCEPT Field       | Description                | Optional? |
-   +--------------------------+----------------------------+-----------+
-   | SessionID                | Cleartext session          | No        |
-   |                          | identifier                 |           |
-   |                          |                            |           |
-   | ServerKeyShare           | Server's key share for the | No        |
-   |                          | ES derivation              |           |
-   |                          |                            |           |
-   | {ServerExtensions}       | Additional extensions      | Yes       |
-   |                          | provided by the server,    |           |
-   |                          | encrypted under ES         |           |
-   |                          |                            |           |
-   | [ResumptionCookie]       | Resumption cookie          | Yes       |
-   |                          | encrypted under a TS-      |           |
-   |                          | derived key                |           |
-   |                          |                            |           |
-   | {(MovePrefix,MoveToken)} | Third CCNxName prefix and  | Yes       |
-   |                          | token to use when moving   |           |
-   |                          | to session establishment   |           |
-   |                          |                            |           |
-   | CertificateRequest*      | Server certificate that    | Yes       |
-   |                          | matches the type of proof  |           |
-   |                          | provided by the client     |           |
-   |                          |                            |           |
-   | CertificateVerify*       | Signature generated over   | Yes       |
-   |                          | the entire HELLO-ACCEPT    |           |
-   |                          | message                    |           |
-   +--------------------------+----------------------------+-----------+
+   +--------------------+----------------------------------+-----------+
+   | HELLO-ACCEPT Field | Description                      | Optional? |
+   +--------------------+----------------------------------+-----------+
+   | SessionID          | Cleartext session identifier     | No        |
+   |                    |                                  |           |
+   | ServerKeyShare     | Server's key share for the ES    | No        |
+   |                    | derivation                       |           |
+   |                    |                                  |           |
+   | {ServerExtensions} | Additional extensions provided   | Yes       |
+   |                    | by the server, encrypted under   |           |
+   |                    | ES                               |           |
+   |                    |                                  |           |
+   | [ResumptionCookie] | Resumption cookie encrypted      | Yes       |
+   |                    | under a TS-derived key           |           |
+   |                    |                                  |           |
+   | {MovePrefix}       | CCNxName prefix to use when      | Yes       |
+   |                    | moving to session establishment  |           |
+   |                    |                                  |           |
+   | {MoveToken}        | A token to use when migrating to | Yes       |
+   |                    | the given MovePrefix             |           |
+   |                    |                                  |           |
+   | Certificate        | Server certificate that matches  | Yes       |
+   |                    | the type of proof provided by    |           |
+   |                    | the client                       |           |
+   +--------------------+----------------------------------+-----------+
 
    If a MovePrefix and MoveToken tuple is provided then in the HELLO-
    ACCEPT message then a CertificateVerify (signature) MUST also be
-   provided in the response.
+   provided in the response.  The server response is always signed and
+   the verification key may be obtained from either the content object
+   ValidationAlgorithm data or the server-provided Certificate field.
 
 6.4.  Round 3
 
@@ -887,36 +888,27 @@ Internet-Draft                   CCNxKE                       March 2016
    after Round 2.  In normal operation, the producer will respond with
    Content Objects whose Payloads are encrypted using a different
    forward-secure key.  That is, interests and Content Objects are
-   encrypted and authenticated using two separate keys.  The producer
-   may also optionally provide a new resumption cookie (RC) with a
-   Content Object response.  This is used to keep the consumer's
+   encrypted and authenticated using two separate keys.
 
 
 
-Mosko, et al.            Expires October 2, 2016               [Page 16]
+
+Mosko, et al.            Expires January 9, 2017               [Page 16]
 
-Internet-Draft                   CCNxKE                       March 2016
+Internet-Draft                   CCNxKE                        July 2016
 
-
-   resumption cookie fresh and to also support 0 RTT resumption.  In
-   this case, the producer's Content Object response has the following
-   fields:
 
    -  Payload: the actual Content Object payload data encrypted with the
       producer's forward-secure key.
 
-   -  ResumptionCookie: A new resumption cookie to be used for resuming
-      this session in the future.
-
-   The producer is free to choose the frequency at which new resumption
-   cookies are issued to the consumer.
-
-   The producer may also reply with a new SessionID.  This is done if
-   the client presented a MoveToken and MoveProof.  A NewSessionID must
-   be accompanied with a NewSessionIDTag, which is equal to the HMAC of
-   NewSessionID computed with the traffic-secret key.  A client MUST
-   then use NewSessionID instead of SessionID after verifying the
-   NewSessionIDTag.
+   The producer may also reply with a new SessionID.  This MUST be done
+   if the client presented a MoveToken and MoveProof.  A NewSessionID
+   must be accompanied with a NewSessionIDTag, which is equal to the
+   HMAC of NewSessionID computed with the traffic-secret key.  A client
+   MUST then use NewSessionID instead of SessionID after verifying the
+   NewSessionIDTag.  If the client server did not provide a MoveToken in
+   Round 2, then the server in Round 3 MAY still provide a NewSessionID,
+   but doing so is not required.
 
 7.  Alternative Exchanges
 
@@ -942,19 +934,25 @@ Internet-Draft                   CCNxKE                       March 2016
 
          Figure 2: SourceCookie exchange -- ExchangeSourceCookie.
 
-
-
-
-
-
-
-
-Mosko, et al.            Expires October 2, 2016               [Page 17]
-
-Internet-Draft                   CCNxKE                       March 2016
-
-
 7.1.  One-RTT Exchange
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Mosko, et al.            Expires January 9, 2017               [Page 17]
+
+Internet-Draft                   CCNxKE                        July 2016
+
 
        Consumer                                           Producer
                                -------->
@@ -966,23 +964,21 @@ Internet-Draft                   CCNxKE                       March 2016
        + SourceProof
        + Timestamp
        + Certificate*
-       + CertificateVerify*
        + {ConsumerData*}
                           I[/prefix/random-2]
                                 -------->
                                                        HELLO-ACCEPT:
                                                     + ServerKeyShare
                                                          + SessionID
-                                                 + {ServerExtensions}
-                                                 + [ResumptionCookie]
-                                              + {CertificateRequest*}
-                                               + {CertificateVerify*}
-                                          + {MovePrefix*, MoveToken*}
-                                                         + {Finished}
+                                                 + [ServerExtensions]
+                                                     + [PreSharedKey]
+                                              + [CertificateRequest*]
+                                          + [MovePrefix*, MoveToken*]
+                                                         + [Finished]
                           CO[/prefix/random-2]
                                <--------
                        **key exchange complete**
-       (Send encrypted data)   <-------->   (Send encrypted data)
+       Send encrypted data   <-------->   Send encrypted data
 
                *  Indicates optional or situation-dependent
                   messages that are not always sent.
@@ -1000,23 +996,22 @@ Internet-Draft                   CCNxKE                       March 2016
 
    As with TLS, the initial application data is protected with the
 
+8.  PSK Mode and Session Resumption
 
-
-
-
-
-Mosko, et al.            Expires October 2, 2016               [Page 18]
-
-Internet-Draft                   CCNxKE                       March 2016
-
-
-8.  Resumption and PSK Mode
-
-   In this mode, the client uses its ResumptionCookie to re-create a
+   In this mode, the client uses its PreSharedKey to re-create a
    previous session.  The client also provides a key share in case the
    server opts to fall back and establish a fresh key.  If the server
-   accepts the ResumptionCookie then it MUST issue a new SessionID and
-   ResumptionCookie for future use with the client.
+
+
+
+
+Mosko, et al.            Expires January 9, 2017               [Page 18]
+
+Internet-Draft                   CCNxKE                        July 2016
+
+
+   accepts the PreSharedKey, then the security context from the previous
+   session is resumed.
 
        Consumer                                           Producer
                                -------->
@@ -1028,20 +1023,19 @@ Internet-Draft                   CCNxKE                       March 2016
        + SourceProof
        + Timestamp
        + PreSharedKey
-       + ResumptionCookie
                           I[/prefix/random-2]
                                 -------->
                                                        HELLO-ACCEPT:
+                                                      + PreSharedKey
                                                     + ServerKeyShare
                                                          + SessionID
-                                                 + {ServerExtensions}
-                                                 + [ResumptionCookie]
-                                          + {MovePrefix*, MoveToken*}
-                                                         + {Finished}
+                                                 + [ServerExtensions]
+                                          + [MovePrefix*, MoveToken*]
+                                                         + [Finished]
                           CO[/prefix/random-2]
                                <--------
                        **key exchange complete**
-       (Send encrypted data)   <-------->   (Send encrypted data)
+       Send encrypted data   <-------->   Send encrypted data
 
                *  Indicates optional or situation-dependent
                   messages that are not always sent.
@@ -1057,20 +1051,20 @@ Internet-Draft                   CCNxKE                       March 2016
 
                       Figure 4: Exchange with 1 RTT.
 
-
-
-
-
-Mosko, et al.            Expires October 2, 2016               [Page 19]
-
-Internet-Draft                   CCNxKE                       March 2016
-
-
 9.  Secret Derivation
 
    In this section we describe how secrets used in the protocol are
    derived.  We cover the SourceCookie, MoveToken, SessionID,
    ResumptionCookie, and the actual traffic keys.
+
+
+
+
+
+Mosko, et al.            Expires January 9, 2017               [Page 19]
+
+Internet-Draft                   CCNxKE                        July 2016
+
 
 9.1.  SourceCookie Derivation
 
@@ -1106,7 +1100,10 @@ Internet-Draft                   CCNxKE                       March 2016
    If this check passes, then the server continues with the
    computationally expensive part of the key exchange protocol.
 
-9.2.  Move Derivation
+   To avoid replays of the SourceProof and SourceCookie, a producer
+   SHOULD keep a sliding window of previously received tuples.
+
+9.2.  MoveToken Derivation
 
    The MoveChallenge and MoveProof are computed identically to the
    SourceChallenge and SourceProof.  The MoveToken, however, is left as
@@ -1117,22 +1114,26 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 2, 2016               [Page 20]
+
+
+
+Mosko, et al.            Expires January 9, 2017               [Page 20]
 
-Internet-Draft                   CCNxKE                       March 2016
+Internet-Draft                   CCNxKE                        July 2016
 
 
-9.3.  SessionID and ResumptionCookie Properties, Derivation, and Usage
+9.3.  SessionID and PreSharedKey Properties, Derivation, and Usage
 
-   The purpose of the session identifier SessionID is to uniquely
-   identify a single session for the producer and consumer.  A Producer
-   MAY use a random bit string or MAY use the method described in this
-   section or MAY use another proprietary method to distinguish clients.
+   The purpose of the session identifier SessionID and PreSharedKey are
+   to uniquely identify a single session for the producer and consumer.
+   A Producer MAY use a random bit string for both or MAY use the method
+   described in this section or MAY use another proprietary method to
+   distinguish clients.
 
    We provide a more secure creation of the SessionID since it is used
-   with the ResumptionCookie derivation (defined later).  Specifically,
-   the SessionID is derived as the encryption of the hash digest of a
-   server secret, TS, and an optional prefix (e.g., MovePrefix).
+   with the PreSharedKey derivation (defined later).  Specifically, the
+   SessionID is derived as the encryption of the hash digest of a server
+   secret, TS, and an optional prefix (e.g., MovePrefix).
 
    Encryption is done by the using a long-term secret key owned by the
    server used for only this purpose, i.e., it is not used for consumer
@@ -1150,32 +1151,31 @@ Internet-Draft                   CCNxKE                       March 2016
    a long-term secret key for this encryption.  Mechanically, this
    derivation is:
 
-   ResumptionCookie = Enc(k2, TS || ( (Prefix3 || MoveToken) )),
+   PreSharedKey = Enc(k2, TS || ( (Prefix3 || MoveToken) )),
 
    where k2 is again a long-term producer key.  Note that it may be the
    case that k1 = k2 (see above), though this is not required.
 
-   With this SessionID and ResumptionCookie, the consumer then resumes a
-   session by providing both the SessionID and ResumptionCookie to the
+   With this SessionID and PreSharedKey, the consumer then resumes a
+   session by providing both the SessionID and PreSharedKey to the
    producer.  This is done to prove to the producer that the consumer
    who knows the SessionID is also in possession of the correct
-   ResumptionCookie.  The producer verifies this by computing
+   PreSharedKey.  The producer verifies this by computing
 
-   (TS || ( (Prefix3 || MoveToken) )) = Dec(k2, ResumptionCookie)
+   (TS || ( (Prefix3 || MoveToken) )) = Dec(k2, PreSharedKey)
 
    and checking the following equality
 
    SessionID = Enc(k1, H(TS || (Prefix3)))
 
    If equality holds, the producer uses the TS recovered from
-   ResumptionCookie to re-initialize the previous session with the
-   consumer.
+   PreSharedKey to re-initialize the previous session with the consumer.
 
 
 
-Mosko, et al.            Expires October 2, 2016               [Page 21]
+Mosko, et al.            Expires January 9, 2017               [Page 21]
 
-Internet-Draft                   CCNxKE                       March 2016
+Internet-Draft                   CCNxKE                        July 2016
 
 
 9.4.  Key Derivation
@@ -1189,18 +1189,12 @@ Internet-Draft                   CCNxKE                       March 2016
    | KE-1 |           | KE-2 |
    +------+           +----+-+
        |                   |
-       |                   |
-       |                   |
    +---v--+           +----v-+
    |  SS  +---+    +--+  ES  |
    +------+   |    |  +------+
-              |    |
-              |    |
             +-v----v-|
             |   MK   |
             +---+----+
-                |
-                |
                 |
               +-v--+
               | TS |
@@ -1227,17 +1221,18 @@ Internet-Draft                   CCNxKE                       March 2016
    Given the values for SS and ES, the remaining derivation steps are
    below as defined in [TLS13].  They are repeated here for posterity.
 
-
-
-Mosko, et al.            Expires October 2, 2016               [Page 22]
-
-Internet-Draft                   CCNxKE                       March 2016
-
-
    1.  xSS = HKDF-Extract(0, SS).  Note that HKDF-Extract always
        produces a value the same length as the underlying hash function.
 
    2.  xES = HKDF-Extract(0, ES)
+
+
+
+
+Mosko, et al.            Expires January 9, 2017               [Page 22]
+
+Internet-Draft                   CCNxKE                        July 2016
+
 
    3.  mSS = HKDF-Expand-Label(xSS, "expanded static secret",
        handshake_hash, L)
@@ -1251,8 +1246,13 @@ Internet-Draft                   CCNxKE                       March 2016
        secret", handshake_hash, L)
 
    In all computations, the value "handshake_hash" is defined as the
-   SHA256 hash digest of all CCNxKE messages contained up to the point
-   of derivation.  More details are given in Section 7.3.1 of [TLS13].
+   SHA256 hash digest of all CCNxKE messages concatenated up to the
+   point of derivation.  For example, the "handshake_hash" used to
+   derive the ES after Round 2 is the hash of the wire-encoded messages
+   (i.e., interest and content object) in Round 1 and Round 2.  These
+   will be available to both the consumer and producer since the same
+   peers are involved in both rounds.  More details are given in
+   Section 7.3.1 of [TLS13].
 
    Updating the traffic secret using the re-key message (defined later)
    increments traffic_secret_N to traffic_secret_(N+1).  This update
@@ -1285,18 +1285,14 @@ Internet-Draft                   CCNxKE                       March 2016
 
 
 
-Mosko, et al.            Expires October 2, 2016               [Page 23]
+Mosko, et al.            Expires January 9, 2017               [Page 23]
 
-Internet-Draft                   CCNxKE                       March 2016
+Internet-Draft                   CCNxKE                        July 2016
 
 
    +-------------+--------+------------------+-------------------------+
    | Record Type | Secret | Phase            | Handshake Context       |
    +-------------+--------+------------------+-------------------------+
-   | 1-RTT       | xSS    | "early handshake | HELLO +                 |
-   | Handshake   |        | key expansion"   | ServerConfiguration +   |
-   |             |        |                  | Server Certificate      |
-   |             |        |                  |                         |
    | 1-RTT Data  | xSS    | "early           | HELLO +                 |
    |             |        | application data | ServerConfiguration +   |
    |             |        | key expansion"   | Server Certificate      |
@@ -1309,17 +1305,21 @@ Internet-Draft                   CCNxKE                       March 2016
    Moreover, the following table indicates the values of "purpose" used
    in the generation of each secret.
 
-                 +------------------+--------------------+
-                 | Secret           | Purpose            |
-                 +------------------+--------------------+
-                 | Client Write Key | "client write key" |
-                 |                  |                    |
-                 | Server Write Key | "server write key" |
-                 |                  |                    |
-                 | Client Write IV  | "client write IV"  |
-                 |                  |                    |
-                 | Server Write IV  | "server write IV"  |
-                 +------------------+--------------------+
+           +------------------------+--------------------------+
+           | Secret                 | Purpose                  |
+           +------------------------+--------------------------+
+           | Client Write Key       | "client write key"       |
+           |                        |                          |
+           | Server Write Key       | "server write key"       |
+           |                        |                          |
+           | Client Write IV        | "client write IV"        |
+           |                        |                          |
+           | Server Write IV        | "server write IV"        |
+           |                        |                          |
+           | Client Migration Token | "client migration token" |
+           |                        |                          |
+           | Server Migration Token | "server migration token" |
+           +------------------------+--------------------------+
 
    (( TODO: should we add examples for each of the above variants? ))
 
@@ -1329,31 +1329,22 @@ Internet-Draft                   CCNxKE                       March 2016
    Interest or Content Object with a KEPayload field containing the flag
    KeyUpdate.  The KEPayload will be encrypted by the traffic key.  Upon
    receipt, the recipient MUST update the traffic secret as defined
-   above and re-compute the traffic encryption and authentication keys.
-   The previous traffic key must be securely discarded.
+   above and re-compute the traffic keys.  The previous traffic key must
+   then be securely discarded.
 
 11.  Application Data Protocol
 
    Once traffic keys and the associated IVs are derived from the CCNxKE
    protocol, all subsequent Interest and Content Object messages are
    encrypted.  Packet encryption uses the TLV encapsulation mechanism
-   specified in [TLVENCAP].  For Interest encryption, the Salt in
+   specified in [TLVENCAP].
 
 
 
-Mosko, et al.            Expires October 2, 2016               [Page 24]
+Mosko, et al.            Expires January 9, 2017               [Page 24]
 
-Internet-Draft                   CCNxKE                       March 2016
+Internet-Draft                   CCNxKE                        July 2016
 
-
-   [TLVENCAP] is set to the packet sequence number.  The same
-   substitution is done for Content Object encryption.  Similarly, the
-   KeyId field is substituted with the SessionID derived by the CCNxKE
-   protocol.  Packet sequence numbers are 64-bit numbers initialized to
-   0 when after the traffic secret is calculated.  Each message
-   increments and uses the sequence number when sending a new datagram
-   (Interest).  The sequence number for an Interest matches that of the
-   Content Object response.
 
 12.  Security Considerations
 
@@ -1367,16 +1358,16 @@ Internet-Draft                   CCNxKE                       March 2016
    anonymous servers should be used with great caution.  Implementations
    and users must be careful when deciding which certificates and
    certificate authorities are acceptable; a dishonest certificate
-   authority can do tremendous damage.
+   authority can cause tremendous damage.
 
 13.  References
 
 13.1.  Normative References
 
    [CCNxMessages]
-              Mosko, M. and I. Solis, "CCNx Messages in TLV Format",
-              January 2016, <https://tools.ietf.org/html/draft-irtf-
-              icnrg-ccnxmessages-01>.
+              Mosko, M., Solis, I., and C. Wood, "CCNx Messages in TLV
+              Format", June 2016, <https://tools.ietf.org/html/draft-
+              irtf-icnrg-ccnxmessages-03>.
 
    [DH]       Diffie, W. and M. Hellman, "New Directions in
               Cryptography", IEEE Transactions on Information Theory,
@@ -1395,13 +1386,6 @@ Internet-Draft                   CCNxKE                       March 2016
               Operation: Galois/Counter Mode (GCM) and GMAC",
               NIST Special Publication 800-38D, November 2007.
 
-
-
-Mosko, et al.            Expires October 2, 2016               [Page 25]
-
-Internet-Draft                   CCNxKE                       March 2016
-
-
    [QUIC]     Iyengar, J. and I. Swett, "QUIC: A UDP-Based Secure and
               Reliable Transport for HTTP/2", December 2015.
 
@@ -1409,6 +1393,14 @@ Internet-Draft                   CCNxKE                       March 2016
               Requirement Levels", BCP 14, RFC 2119,
               DOI 10.17487/RFC2119, March 1997,
               <http://www.rfc-editor.org/info/rfc2119>.
+
+
+
+
+Mosko, et al.            Expires January 9, 2017               [Page 25]
+
+Internet-Draft                   CCNxKE                        July 2016
+
 
    [RFC2631]  Rescorla, E., "Diffie-Hellman Key Agreement Method",
               RFC 2631, DOI 10.17487/RFC2631, June 1999,
@@ -1449,15 +1441,6 @@ Internet-Draft                   CCNxKE                       March 2016
               without Bit Shifting", RFC 6479, DOI 10.17487/RFC6479,
               January 2012, <http://www.rfc-editor.org/info/rfc6479>.
 
-
-
-
-
-Mosko, et al.            Expires October 2, 2016               [Page 26]
-
-Internet-Draft                   CCNxKE                       March 2016
-
-
    [RSA]      Rivest, R., Shamir, A., and L. Adleman, "A Method for
               Obtaining Digital Signatures and Public-Key
               Cryptosystems", Communications of the ACM v. 21, n. 2, pp.
@@ -1465,6 +1448,15 @@ Internet-Draft                   CCNxKE                       March 2016
 
    [SALSA20]  Bernstein, D., "Salsa20 specification",
               www.http://cr.yp.to/snuffle/spec.pdf , April 2005.
+
+
+
+
+
+Mosko, et al.            Expires January 9, 2017               [Page 26]
+
+Internet-Draft                   CCNxKE                        July 2016
+
 
    [TLS13]    Rescorla, E., "The Transport Layer Security (TLS) Protocol
               Version 1.3", December 2015, <https://tools.ietf.org/html/
@@ -1480,11 +1472,6 @@ Internet-Draft                   CCNxKE                       March 2016
               L. Lamport, "Password Authentication with Insecure
               Communication", ANSI Communications of the ACM 24.11, pp
               770-772, November 1981.
-
-   [RFC5077]  Salowey, J., Zhou, H., Eronen, P., and H. Tschofenig,
-              "Transport Layer Security (TLS) Session Resumption without
-              Server-Side State", RFC 5077, DOI 10.17487/RFC5077,
-              January 2008, <http://www.rfc-editor.org/info/rfc5077>.
 
 Authors' Addresses
 
@@ -1509,4 +1496,17 @@ Authors' Addresses
 
 
 
-Mosko, et al.            Expires October 2, 2016               [Page 27]
+
+
+
+
+
+
+
+
+
+
+
+
+
+Mosko, et al.            Expires January 9, 2017               [Page 27]

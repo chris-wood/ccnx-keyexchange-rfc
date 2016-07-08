@@ -1,11 +1,9 @@
 ---
 title: CCNx Key Exchange Protocol Version 1.0
 abbrev: CCNxKE
-docname: draft-wood-ccnxkeyexchange-01
+docname: draft-wood-icnrg-ccnxkeyexchange-00
 category: std
 
-<!-- ipr: pre5378Trust200902 -->
-<!-- ipr: None -->
 area: General
 workgroup: icnrg
 keyword: Internet-Draft
@@ -39,16 +37,7 @@ author:
     email: christopher.wood@parc.com
 
 normative:
-  <!-- RFC2104: --> <!-- HMAC --> -->
   RFC2119:
-  <!-- RFC3447: --> <!--  Public-Key Cryptography Standards (PKCS) #1: RSA Cryptography Specifications Version 2.1--> -->
-  <!-- RFC5280: -->
-  <!-- RFC5288: -->
-  <!-- RFC5289: -->
-  <!-- RFC6209: -->
-  <!-- RFC6367: -->
-  <!-- RFC6655: -->
-  <!-- RFC7251: -->
   RFC4086:  <!-- randomness reqs -->
   RFC5869: <!-- hkdf -->
   RFC2631: <!-- DH key exchange -->
@@ -128,7 +117,7 @@ normative:
     seriesinfo:
       ANSI: ANS X9.62-2005
   CCNxMessages:
-    target: https://tools.ietf.org/html/draft-irtf-icnrg-ccnxmessages-01
+    target: https://tools.ietf.org/html/draft-irtf-icnrg-ccnxmessages-03
     title: "CCNx Messages in TLV Format"
     author:
         -
@@ -137,7 +126,10 @@ normative:
         -
             ins: I. Solis
             org: PARC, Inc.
-    date: 2016-1-11
+        - 
+            ins: C. Wood
+            org: PARC, Inc.
+    date: 2016-06-28 
   TLVENCAP:
     target: https://github.com/PARC/ccnx-tlvencap-rfc
     title: CCNx Packet Encapsulation
@@ -150,7 +142,6 @@ normative:
             org: PARC, Inc.
 
 informative:
-  RFC5077: <!-- Transport Layer Security (TLS) Session Resumption without Server-Side State -->
   HASHCHAIN:
       title: "Password Authentication with Insecure Communication"
       author:

@@ -15,7 +15,7 @@
 <?rfc inline="yes"?>
 <?rfc text-list-symbols="-o*+"?>
 
-<rfc docName="draft-wood-ccnxkeyexchange-01" category="std">
+<rfc docName="draft-wood-icnrg-ccnxkeyexchange-00" category="exp">
 
   <front>
     <title abbrev="CCNxKE">CCNx Key Exchange Protocol Version 1.0</title>
@@ -39,7 +39,7 @@
       </address>
     </author>
 
-    <date year="2016" month="March" day="31"/>
+    <date year="2016" month="July" day="08"/>
 
     <area>General</area>
     <workgroup>icnrg</workgroup>
@@ -380,26 +380,28 @@ diagram omits some parts of each message for brevity.</t>
                                                     HELLO-REJECT:
                                                       + Timestamp
                                                    + SourceCookie
+                                                 + pinned-prefix*
                                                + ServerChallenge*
                                            + ServerConfiguration*
 
-                       CO[/prefix/random-1]
+                      CO[/prefix/random-1]
                             <---------
     FULL-HELLO:
     + ClientKeyShare
     + SourceCookie
     + SourceProof
+    + MoveChallenge
     + Timestamp
-                       I[/prefix/random-2]
+                    I[/pinned-prefix/random-2]
                              -------->
                                                     HELLO-ACCEPT:
                                                  + ServerKeyShare
                                                       + SessionID
-                                          + {CertificateRequest*}
-                                           + {CertificateVerify*}
-                                     + {MovePrefix*, MoveToken)*}
-                                                     + {Finished}
-                       CO[/prefix/random-2]
+                                          + [CertificateRequest*]
+                                           + [CertificateVerify*]
+                                      + [MovePrefix*, MoveToken*]
+                                                     + [Finished]
+                    CO[/pinned-prefix/random-2]
                             <--------
                     **key exchange complete**
     Payload:
@@ -416,7 +418,7 @@ diagram omits some parts of each message for brevity.</t>
                      CO[/prefix/SessionID/[...]]
                             <--------
 
-    (Repeat with data)      <-------->       (Repeat with data)
+    Repeat with data        <-------->        Repeat with data
 
             *  Indicates optional or situation-dependent
                messages that are not always sent.
@@ -442,7 +444,7 @@ a JSON object, e.g.,</t>
 <t>{
     “ClientKeyShare” : 0xaa,
     “SourceCookie” : 0xbb,
-    “SourceProof” : 0xbb,
+    “SourceProof” : 0xcc,
     …
 }</t>
 
@@ -488,6 +490,9 @@ KEPayload has the following fields:</t>
       <c>SourceCookie</c>
       <c>A cookie that binds the consumer’s challenge to the current timestamp</c>
       <c>No</c>
+      <c>PinnedPrefix</c>
+      <c>A new prefix that pins the key exchange to a particular server</c>
+      <c>Yes</c>
       <c>ServerConfiguration</c>
       <c>The public server configuration information</c>
       <c>Yes</c>
@@ -495,6 +500,11 @@ KEPayload has the following fields:</t>
       <c>A random value for the consumer to include in its CertificateVerify if the server requires client authentication</c>
       <c>Yes</c>
 </texttable>
+
+<t>The Timestamp and SourceCookie are used in Round 2. Their derivation is described later.
+If the server provides a PinnedPrefix then the consumer must use this prefix in Round 2
+in lieu of the Round 1 name prefix. (This is because the PinnedPrefix identifies a particular
+endpoint that is capable of completing the key exchange.)</t>
 
 <t>The ServerConfiguration information is a semi-static catalog of information that consumers may
 use to complete future key exchanges with the producer. The fields of the ServerConfiguration
@@ -571,8 +581,8 @@ forward-secure key used for future communication. It is assumed that
 the consumer already has the ServerConfiguration information that is provided from
 the producer in Round 1. It is also assumed that the consumer has a</t>
 
-<t>Moreover, assume that nonce2 is a ephemeral nonce provided by the
-producer in Round 1. Then, the consumer issues an Interest with the following name:</t>
+<t>Assuming that /prefix is the prefix established after Round 1, then the consumer
+issues an Interest with the following name:</t>
 
 <figure><artwork><![CDATA[
     /prefix/random-2
@@ -602,9 +612,6 @@ producer in Round 1. Then, the consumer issues an Interest with the following na
       <c>PreSharedKey</c>
       <c>A pre-shared key that can be configured between a consumer and producer</c>
       <c>Yes</c>
-      <c>ResumptionCookie</c>
-      <c>The ResumptionCookie derived from a past session</c>
-      <c>Yes</c>
       <c>{MoveChallenge}</c>
       <c>A move challenge generated identically to the SourceChallenge</c>
       <c>Yes</c>
@@ -626,18 +633,16 @@ producer in Round 1. Then, the consumer issues an Interest with the following na
       <c>Certificate</c>
       <c>The client’s certificate</c>
       <c>Yes</c>
-      <c>CertificateVerify</c>
-      <c>A signature generated over the entire FULL-HELLO message</c>
-      <c>Yes</c>
 </texttable>
 
-<t>((TODO: provide more details about each of these fields))</t>
+<t>The client may optionally sign this interest. If so, the client MUST provide its certificate
+in the Certificate field which contains the key used to verify this signature.</t>
 
 <t>Upon receipt of this interest, the producer performs the DH computation
 to compute ES and SS, decrypts all protected fields in the consumer’s KEPayload, and validates the
 algorithm choice selection (AlgChoice). If any of these steps fail, the producer
 replies with with a HELLO-REJECT Content Object whose KEPayload contains
-a REJ flag and the reason of the error. The REJ flag and value are encrypted
+a REJECT flag and the reason of the error. The REJECT flag and value are encrypted
 by the SS (if possible).</t>
 
 <t>If the above steps complete without failure or error, then the producer responds with a
@@ -659,19 +664,21 @@ Content Object whose KEPayload has the following fields:</t>
       <c>[ResumptionCookie]</c>
       <c>Resumption cookie encrypted under a TS-derived key</c>
       <c>Yes</c>
-      <c>{(MovePrefix,MoveToken)}</c>
-      <c>Third CCNxName prefix and token to use when moving to session establishment</c>
+      <c>{MovePrefix}</c>
+      <c>CCNxName prefix to use when moving to session establishment</c>
       <c>Yes</c>
-      <c>CertificateRequest*</c>
+      <c>{MoveToken}</c>
+      <c>A token to use when migrating to the given MovePrefix</c>
+      <c>Yes</c>
+      <c>Certificate</c>
       <c>Server certificate that matches the type of proof provided by the client</c>
-      <c>Yes</c>
-      <c>CertificateVerify*</c>
-      <c>Signature generated over the entire HELLO-ACCEPT message</c>
       <c>Yes</c>
 </texttable>
 
 <t>If a MovePrefix and MoveToken tuple is provided then in the HELLO-ACCEPT message then
-a CertificateVerify (signature) MUST also be provided in the response.</t>
+a CertificateVerify (signature) MUST also be provided in the response. The server response
+is always signed and the verification key may be obtained from either the content object
+ValidationAlgorithm data or the server-provided Certificate field.</t>
 
 </section>
 <section anchor="round-3" title="Round 3">
@@ -680,25 +687,19 @@ a CertificateVerify (signature) MUST also be provided in the response.</t>
 encrypted using one of the forward-secure keys derived after Round 2. In normal operation,
 the producer will respond with Content Objects whose Payloads are encrypted using
 a different forward-secure key. That is, interests and Content Objects are encrypted
-and authenticated using two separate keys. The producer may also optionally provide
-a new resumption cookie (RC) with a Content Object response. This is used to keep
-the consumer’s resumption cookie fresh and to also support 0 RTT resumption. In this
-case, the producer’s Content Object response has the following fields:</t>
+and authenticated using two separate keys.</t>
 
 <t><list style="symbols">
   <t>Payload: the actual Content Object payload data encrypted with the producer’s
 forward-secure key.</t>
-  <t>ResumptionCookie: A new resumption cookie to be used for resuming this session in the future.</t>
 </list></t>
 
-<t>The producer is free to choose the frequency at which new resumption cookies are
-issued to the consumer.</t>
-
-<t>The producer may also reply with a new SessionID. This is done if the client presented
+<t>The producer may also reply with a new SessionID. This MUST be done if the client presented
 a MoveToken and MoveProof. A NewSessionID must be accompanied with a NewSessionIDTag,
 which is equal to the HMAC of NewSessionID computed with the traffic-secret key.
 A client MUST then use NewSessionID instead of SessionID after verifying the
-NewSessionIDTag.</t>
+NewSessionIDTag. If the client server did not provide a MoveToken in Round 2, then
+the server in Round 3 MAY still provide a NewSessionID, but doing so is not required.</t>
 
 </section>
 </section>
@@ -738,23 +739,21 @@ HELLO:
     + SourceProof
     + Timestamp
     + Certificate*
-    + CertificateVerify*
     + {ConsumerData*}
                        I[/prefix/random-2]
                              -------->
                                                     HELLO-ACCEPT:
                                                  + ServerKeyShare
                                                       + SessionID
-                                              + {ServerExtensions}
-                                              + [ResumptionCookie]
-                                           + {CertificateRequest*}
-                                            + {CertificateVerify*}
-                                       + {MovePrefix*, MoveToken*}
-                                                      + {Finished}
+                                              + [ServerExtensions]
+                                                  + [PreSharedKey]
+                                           + [CertificateRequest*]
+                                       + [MovePrefix*, MoveToken*]
+                                                      + [Finished]
                        CO[/prefix/random-2]
                             <--------
                     **key exchange complete**
-    (Send encrypted data)   <-------->   (Send encrypted data)
+    Send encrypted data   <-------->   Send encrypted data
 
             *  Indicates optional or situation-dependent
                messages that are not always sent.
@@ -773,12 +772,12 @@ HELLO:
 
 </section>
 </section>
-<section anchor="resumption-and-psk-mode" title="Resumption and PSK Mode">
+<section anchor="psk-mode-and-session-resumption" title="PSK Mode and Session Resumption">
 
-<t>In this mode, the client uses its ResumptionCookie to re-create a previous
+<t>In this mode, the client uses its PreSharedKey to re-create a previous
 session. The client also provides a key share in case the server opts to fall back
-and establish a fresh key. If the server accepts the ResumptionCookie then it
-MUST issue a new SessionID and ResumptionCookie for future use with the client.</t>
+and establish a fresh key. If the server accepts the PreSharedKey, then the security
+context from the previous session is resumed.</t>
 
 <figure title="Exchange with 1 RTT." anchor="resumption-exchange"><artwork><![CDATA[
     Consumer                                           Producer
@@ -791,20 +790,19 @@ MUST issue a new SessionID and ResumptionCookie for future use with the client.<
     + SourceProof
     + Timestamp
     + PreSharedKey
-    + ResumptionCookie
                        I[/prefix/random-2]
                              -------->
                                                     HELLO-ACCEPT:
+                                                   + PreSharedKey
                                                  + ServerKeyShare
                                                       + SessionID
-                                              + {ServerExtensions}
-                                              + [ResumptionCookie]
-                                       + {MovePrefix*, MoveToken*}
-                                                      + {Finished}
+                                              + [ServerExtensions]
+                                       + [MovePrefix*, MoveToken*]
+                                                      + [Finished]
                        CO[/prefix/random-2]
                             <--------
                     **key exchange complete**
-    (Send encrypted data)   <-------->   (Send encrypted data)
+    Send encrypted data   <-------->   Send encrypted data
 
             *  Indicates optional or situation-dependent
                messages that are not always sent.
@@ -860,23 +858,26 @@ SourceCookie = HMAC(k, SHA256(SourceProof) || timestamp)
 <t>If this check passes, then the server continues with the computationally expensive
 part of the key exchange protocol.</t>
 
+<t>To avoid replays of the SourceProof and SourceCookie, a producer SHOULD keep a sliding
+window of previously received tuples.</t>
+
 </section>
-<section anchor="move-derivation" title="Move Derivation">
+<section anchor="movetoken-derivation" title="MoveToken Derivation">
 
 <t>The MoveChallenge and MoveProof are computed identically to the SourceChallenge
 and SourceProof. The MoveToken, however, is left as an opaque bit string. Extensions
 may be specified to describe how to compute this value.</t>
 
 </section>
-<section anchor="sessionid-and-resumptioncookie-properties-derivation-and-usage" title="SessionID and ResumptionCookie Properties, Derivation, and Usage">
+<section anchor="sessionid-and-presharedkey-properties-derivation-and-usage" title="SessionID and PreSharedKey Properties, Derivation, and Usage">
 
-<t>The purpose of the session identifier SessionID is to uniquely
+<t>The purpose of the session identifier SessionID and PreSharedKey are to uniquely
 identify a single session for the producer and consumer. A Producer MAY use
-a random bit string or MAY use the method described in this section or MAY
+a random bit string for both or MAY use the method described in this section or MAY
 use another proprietary method to distinguish clients.</t>
 
 <t>We provide a more secure creation of the SessionID since it is used
-with the ResumptionCookie derivation (defined later). Specifically,
+with the PreSharedKey derivation (defined later). Specifically,
 the SessionID is derived as the encryption of the hash digest of a server
 secret, TS, and an optional prefix (e.g., MovePrefix).</t>
 
@@ -898,19 +899,19 @@ of the server secret, TS, and the optional (MovePrefix, MoveToken) tuple
 for this encryption. Mechanically, this derivation is:</t>
 
 <figure><artwork><![CDATA[
-ResumptionCookie = Enc(k2, TS || ( (Prefix3 || MoveToken) )),
+PreSharedKey = Enc(k2, TS || ( (Prefix3 || MoveToken) )),
 ]]></artwork></figure>
 
 <t>where k2 is again a long-term producer key. Note that it may be the case that
 k1 = k2 (see above), though this is not required.</t>
 
-<t>With this SessionID and ResumptionCookie, the consumer then resumes a session by providing
-both the SessionID and ResumptionCookie to the producer. This is done to prove to the producer that
-the consumer who knows the SessionID is also in possession of the correct ResumptionCookie.
+<t>With this SessionID and PreSharedKey, the consumer then resumes a session by providing
+both the SessionID and PreSharedKey to the producer. This is done to prove to the producer that
+the consumer who knows the SessionID is also in possession of the correct PreSharedKey.
 The producer verifies this by computing</t>
 
 <figure><artwork><![CDATA[
-(TS || ( (Prefix3 || MoveToken) )) = Dec(k2, ResumptionCookie)
+(TS || ( (Prefix3 || MoveToken) )) = Dec(k2, PreSharedKey)
 ]]></artwork></figure>
 
 <t>and checking the following equality</t>
@@ -919,7 +920,7 @@ The producer verifies this by computing</t>
 SessionID = Enc(k1, H(TS || (Prefix3)))
 ]]></artwork></figure>
 
-<t>If equality holds, the producer uses the TS recovered from ResumptionCookie to
+<t>If equality holds, the producer uses the TS recovered from PreSharedKey to
 re-initialize the previous session with the consumer.</t>
 
 </section>
@@ -934,18 +935,12 @@ from that, the traffic secret (TS). These dependencies are shown below.</t>
 | KE-1 |           | KE-2 |
 +------+           +----+-+
     |                   |
-    |                   |
-    |                   |
 +---v--+           +----v-+
 |  SS  +---+    +--+  ES  |
 +------+   |    |  +------+
-           |    |
-           |    |
          +-v----v-|
          |   MK   |
          +---+----+
-             |
-             |
              |
            +-v--+
            | TS |
@@ -986,8 +981,11 @@ They are repeated here for posterity.</t>
 </list></t>
 
 <t>In all computations, the value “handshake_hash” is defined as the SHA256 hash
-digest of all CCNxKE messages contained up to the point of derivation. More details
-are given in Section 7.3.1 of <xref target="TLS13"/>.</t>
+digest of all CCNxKE messages concatenated up to the point of derivation. For example,
+the “handshake_hash” used to derive the ES after Round 2 is the hash of the 
+wire-encoded messages (i.e., interest and content object) in Round 1 and Round 2. 
+These will be available to both the consumer and producer since the same peers are
+involved in both rounds. More details are given in Section 7.3.1 of <xref target="TLS13"/>.</t>
 
 <t>Updating the traffic secret using the re-key message (defined later) increments
 traffic_secret_N to traffic_secret_(N+1). This update procedure works as follows:</t>
@@ -1013,10 +1011,6 @@ and “handshake_context” to be used when defining keys for different purposes
       <ttcol align='left'>Secret</ttcol>
       <ttcol align='left'>Phase</ttcol>
       <ttcol align='left'>Handshake Context</ttcol>
-      <c>1-RTT Handshake</c>
-      <c>xSS</c>
-      <c>“early handshake key expansion”</c>
-      <c>HELLO + ServerConfiguration + Server Certificate</c>
       <c>1-RTT Data</c>
       <c>xSS</c>
       <c>“early application data key expansion”</c>
@@ -1041,6 +1035,10 @@ generation of each secret.</t>
       <c>“client write IV”</c>
       <c>Server Write IV</c>
       <c>“server write IV”</c>
+      <c>Client Migration Token</c>
+      <c>“client migration token”</c>
+      <c>Server Migration Token</c>
+      <c>“server migration token”</c>
 </texttable>
 
 <t>(( TODO: should we add examples for each of the above variants? ))</t>
@@ -1052,22 +1050,15 @@ generation of each secret.</t>
 <t>Either the client and server can trigger a key update by sending an Interest or
 Content Object with a KEPayload field containing the flag KeyUpdate. The KEPayload
 will be encrypted by the traffic key. Upon receipt, the recipient MUST update the
-traffic secret as defined above and re-compute the traffic encryption and authentication
-keys. The previous traffic key must be securely discarded.</t>
+traffic secret as defined above and re-compute the traffic keys. The previous 
+traffic key must then be securely discarded.</t>
 
 </section>
 <section anchor="application-data-protocol" title="Application Data Protocol">
 
 <t>Once traffic keys and the associated IVs are derived from the CCNxKE protocol,
 all subsequent Interest and Content Object messages are encrypted. Packet encryption
-uses the TLV encapsulation mechanism specified in <xref target="TLVENCAP"/>. For Interest
-encryption, the Salt in <xref target="TLVENCAP"/> is set to the packet sequence number.
-The same substitution is done for Content Object encryption. Similarly, the
-KeyId field is substituted with the SessionID derived by the CCNxKE protocol.
-Packet sequence numbers are 64-bit numbers initialized to 0 when after the
-traffic secret is calculated. Each message increments and uses the sequence
-number when sending a new datagram (Interest). The sequence number for an Interest
-matches that of the Content Object response.</t>
+uses the TLV encapsulation mechanism specified in <xref target="TLVENCAP"/>.</t>
 
 </section>
 <section anchor="security-considerations" title="Security Considerations">
@@ -1081,7 +1072,7 @@ algorithm supported, and only trustworthy cryptographic functions should be
 used. Short public keys and anonymous servers should be used with great
 caution. Implementations and users must be careful when deciding which
 certificates and certificate authorities are acceptable; a dishonest
-certificate authority can do tremendous damage.</t>
+certificate authority can cause tremendous damage.</t>
 
 </section>
 
@@ -1327,7 +1318,7 @@ certificate authority can do tremendous damage.</t>
   </front>
   <seriesInfo name="ANSI" value="ANS X9.62-2005"/>
 </reference>
-<reference anchor="CCNxMessages" target="https://tools.ietf.org/html/draft-irtf-icnrg-ccnxmessages-01">
+<reference anchor="CCNxMessages" target="https://tools.ietf.org/html/draft-irtf-icnrg-ccnxmessages-03">
   <front>
     <title>CCNx Messages in TLV Format</title>
     <author initials="M." surname="Mosko">
@@ -1336,7 +1327,10 @@ certificate authority can do tremendous damage.</t>
     <author initials="I." surname="Solis">
       <organization>PARC, Inc.</organization>
     </author>
-    <date year="2016" month="January" day="11"/>
+    <author initials="C." surname="Wood">
+      <organization>PARC, Inc.</organization>
+    </author>
+    <date year="2016" month="June" day="28"/>
   </front>
 </reference>
 <reference anchor="TLVENCAP" target="https://github.com/PARC/ccnx-tlvencap-rfc">
@@ -1356,25 +1350,6 @@ certificate authority can do tremendous damage.</t>
     </references>
 
     <references title='Informative References'>
-
-
-
-
-
-<reference  anchor='RFC5077' target='http://www.rfc-editor.org/info/rfc5077'>
-<front>
-<title>Transport Layer Security (TLS) Session Resumption without Server-Side State</title>
-<author initials='J.' surname='Salowey' fullname='J. Salowey'><organization /></author>
-<author initials='H.' surname='Zhou' fullname='H. Zhou'><organization /></author>
-<author initials='P.' surname='Eronen' fullname='P. Eronen'><organization /></author>
-<author initials='H.' surname='Tschofenig' fullname='H. Tschofenig'><organization /></author>
-<date year='2008' month='January' />
-<abstract><t>This document describes a mechanism that enables the Transport Layer Security (TLS) server to resume sessions and avoid keeping per-client session state.  The TLS server encapsulates the session state into a ticket and forwards it to the client.  The client can subsequently resume a session using the obtained ticket.  This document obsoletes RFC 4507.  [STANDARDS-TRACK]</t></abstract>
-</front>
-<seriesInfo name='RFC' value='5077'/>
-<seriesInfo name='DOI' value='10.17487/RFC5077'/>
-</reference>
-
 
 <reference anchor="HASHCHAIN" >
   <front>
